@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "working time recorder module"
+    },
+    {
+      "name": "MainAbility_desc",
+      "value": "Working time record application"
+    },
+    {
+      "name": "MainAbility_label",
+      "value": "工时打卡"
+    }
+  ]
+}

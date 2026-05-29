@@ -1,0 +1,9 @@
+85: 
+86:       if (this.showSettingsPage) {
+87:         this.buildSettingsPage();
+88:       }
+89: 
+90:       if (this.calendarExpanded) {
+91:         this.buildExpandedCalendarOverlay();
+92:       }
+93: 

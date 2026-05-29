@@ -1,0 +1,91 @@
+841: 
+842:   initializeData(): void {
+843:     this.selectedDateKey = this.createDateKey(new Date());
+844:     this.syncDisplayMonthToSelectedDate();
+845:     this.excludedRanges = [];
+846:     this.records = this.createMockRecords(this.selectedDateKey);
+847: 
+848:     try {
+849:       let hostContext: Context = this.getUIContext().getHostContext() as Context;
+850:       this.pref = preferences.getPreferencesSync(hostContext, { name: this.prefName });
+851:       this.loadPersistedState();
+852:     } catch (error) {
+853:       this.pref = null;
+854:     }
+855: 
+856:     if (this.records.length === 0) {
+857:       this.records = this.createMockRecords(this.selectedDateKey);
+858:       this.persistState();
+859:     }
+860:   }
+861: 
+862:   loadPersistedState(): void {
+863:     if (this.pref === null) {
+864:       return;
+865:     }
+866: 
+867:     let selectedDateKey: string = this.pref.getSync(this.prefSelectedDateKey, this.selectedDateKey) as string;
+868:     if (selectedDateKey.length > 0) {
+869:       this.selectedDateKey = selectedDateKey;
+870:     }
+871: 
+872:     let displayMonthText: string = this.pref.getSync(this.prefDisplayMonth, '') as string;
+873:     if (displayMonthText.length > 0) {
+874:       this.restoreDisplayMonth(displayMonthText);
+875:     } else {
+876:       this.syncDisplayMonthToSelectedDate();
+877:     }
+878: 
+879:     let targetHoursText: string = this.pref.getSync(this.prefTargetHours, this.targetAverageHours.toString()) as string;
+880:     let targetHoursValue: number = Number(targetHoursText);
+881:     if (!Number.isNaN(targetHoursValue)) {
+882:       this.targetAverageHours = targetHoursValue;
+883:     }
+884: 
+885:     let rangeText: string = this.pref.getSync(this.prefExcludedRanges, '') as string;
+886:     if (rangeText.length > 0) {
+887:       this.excludedRanges = this.deserializeRanges(rangeText);
+888:     }
+889: 
+890:     let recordsText: string = this.pref.getSync(this.prefRecords, '') as string;
+891:     if (recordsText.length > 0) {
+892:       this.records = this.deserializeRecords(recordsText);
+893:     }
+894:   }
+895: 
+896:   persistState(): void {
+897:     if (this.pref === null) {
+898:       return;
+899:     }
+900: 
+901:     try {
+902:       this.pref.putSync(this.prefSelectedDateKey, this.selectedDateKey);
+903:       this.pref.putSync(this.prefDisplayMonth, this.getDisplayMonthKey());
+904:       this.pref.putSync(this.prefTargetHours, this.targetAverageHours.toString());
+905:       this.pref.putSync(this.prefExcludedRanges, this.serializeRanges());
+906:       this.pref.putSync(this.prefRecords, this.serializeRecords());
+907:       this.pref.flush();
+908:     } catch (error) {
+909:     }
+910:   }
+911: 
+912:   serializeRanges(): string {
+913:     let result: string = '';
+914:     let index: number = 0;
+915:     while (index < this.excludedRanges.length) {
+916:       let item: ExcludedRange = this.excludedRanges[index];
+917:       if (result.length > 0) {
+918:         result += '|';
+919:       }
+920:       result += item.start + ',' + item.end;
+921:       index += 1;
+922:     }
+923:     return result;
+924:   }
+925: 
+926:   deserializeRanges(content: string): ExcludedRange[] {
+927:     let result: ExcludedRange[] = [];
+928:     let items: string[] = content.split('|');
+929:     let index: number = 0;
+930:     while (index < items.length) {
+931:       let pair: string = items[index];

@@ -1,0 +1,86 @@
+1181:     if (record === null) {
+1182:       return 0;
+1183:     }
+1184:     return record.punches.length;
+1185:   }
+1186: 
+1187:   getSelectedWorkMinutes(): number {
+1188:     let record: DailyPunchRecord | null = this.getRecordByDateKey(this.selectedDateKey);
+1189:     if (record === null) {
+1190:       return 0;
+1191:     }
+1192:     return this.calculateWorkMinutes(record.punches);
+1193:   }
+1194: 
+1195:   getStartTimeText(): string {
+1196:     let record: DailyPunchRecord | null = this.getRecordByDateKey(this.selectedDateKey);
+1197:     if (record === null || record.punches.length === 0) {
+1198:       return '--:--';
+1199:     }
+1200:     return this.formatMinuteAsTime(record.punches[0]);
+1201:   }
+1202: 
+1203:   getEndTimeText(): string {
+1204:     let record: DailyPunchRecord | null = this.getRecordByDateKey(this.selectedDateKey);
+1205:     if (record === null || record.punches.length < 2) {
+1206:       return '--:--';
+1207:     }
+1208:     return this.formatMinuteAsTime(record.punches[record.punches.length - 1]);
+1209:   }
+1210: 
+1211:   getExcludeSummaryText(): string {
+1212:     if (this.excludedRanges.length === 0) {
+1213:       return '未设置排除时�?;
+1214:     }
+1215:     return '已排�?' + this.excludedRanges.length.toString() + ' 个时�?;
+1216:   }
+1217: 
+1218:   getSummaryItems(): SummaryItem[] {
+1219:     let averageMinutes: number = this.getDisplayedMonthAverageMinutes();
+1220:     let targetMinutes: number = Math.round(this.targetAverageHours * 60);
+1221:     let items: SummaryItem[] = [];
+1222:     items.push(new SummaryItem('目标平均工时', this.formatMinutes(targetMinutes)));
+1223:     items.push(new SummaryItem('当前平均工时', this.formatMinutes(averageMinutes)));
+1224:     return items;
+1225:   }
+1226: 
+1227:   getDifferenceLabel(): string {
+1228:     let averageMinutes: number = this.getDisplayedMonthAverageMinutes();
+1229:     let targetMinutes: number = Math.round(this.targetAverageHours * 60);
+1230:     let delta: number = averageMinutes - targetMinutes;
+1231:     if (delta === 0) {
+1232:       return '与目标持�?;
+1233:     }
+1234:     if (delta > 0) {
+1235:       return '比目标多 ' + this.formatMinutes(delta);
+1236:     }
+1237:     return '比目标少 ' + this.formatMinutes(0 - delta);
+1238:   }
+1239: 
+1240:   getDifferenceColor(): string {
+1241:     let averageMinutes: number = this.getDisplayedMonthAverageMinutes();
+1242:     let targetMinutes: number = Math.round(this.targetAverageHours * 60);
+1243:     let delta: number = averageMinutes - targetMinutes;
+1244:     if (delta === 0) {
+1245:       return '#132033';
+1246:     }
+1247:     if (delta > 0) {
+1248:       return '#1EA97C';
+1249:     }
+1250:     return '#D85353';
+1251:   }
+1252: 
+1253:   getDisplayedMonthAverageMinutes(): number {
+1254:     let totalMinutes: number = 0;
+1255:     let validDays: number = 0;
+1256:     let index: number = 0;
+1257:     while (index < this.records.length) {
+1258:       let record: DailyPunchRecord = this.records[index];
+1259:       let date: Date | null = this.parseDateKey(record.dateKey);
+1260:       if (date !== null && date.getFullYear() === this.displayYear && date.getMonth() === this.displayMonth) {
+1261:         let workMinutes: number = this.calculateWorkMinutes(record.punches);
+1262:         if (workMinutes > 0) {
+1263:           totalMinutes += workMinutes;
+1264:           validDays += 1;
+1265:         }
+1266:       }

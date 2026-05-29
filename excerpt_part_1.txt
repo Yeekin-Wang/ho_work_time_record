@@ -1,0 +1,23 @@
+57:   @State displayYear: number = 0;
+58:   @State displayMonth: number = 0;
+59:   @State targetAverageHours: number = 8;
+60:   @State excludedRanges: ExcludedRange[] = [];
+61:   @State records: DailyPunchRecord[] = [];
+62:   @State showRangeDialog: boolean = false;
+63:   @State rangeStartInput: string = '12:00';
+64:   @State rangeEndInput: string = '13:00';
+65:   @State calendarTouchStartX: number = 0;
+66:   @State settingsTouchStartX: number = 0;
+67:   @State punchCardScale: number = 1;
+68: 
+69:   private pref: preferences.Preferences | null = null;
+70:   private readonly prefName: string = 'working_time_record';
+71:   private readonly prefSelectedDateKey: string = 'selected_date_key';
+72:   private readonly prefDisplayMonth: string = 'display_month';
+73:   private readonly prefTargetHours: string = 'target_hours';
+74:   private readonly prefExcludedRanges: string = 'excluded_ranges';
+75:   private readonly prefRecords: string = 'records';
+76:   private weekdayNames: string[] = ['ä¸€', 'äº?, 'ä¸?, 'å›?, 'äº?, 'å…?, 'æ—?];
+77: 
+78:   aboutToAppear(): void {
+79:     this.initializeData();

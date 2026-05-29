@@ -1,0 +1,59 @@
+733: 
+734:   @Builder
+735:   buildMonthlyRecordCard() {
+736:     Column({ space: 14 }) {
+737:       Text('本月记录')
+738:         .fontSize(18)
+739:         .fontWeight(FontWeight.Medium)
+740:         .fontColor('#132033');
+741: 
+742:       if (this.getDisplayedMonthRecords().length === 0) {
+743:         Text('当前月份还没有打卡记录，点击“立即打卡”开始记录�?)
+744:           .fontSize(14)
+745:           .fontColor('#60708A')
+746:           .padding({ top: 8, bottom: 8 });
+747:       } else {
+748:         Column({ space: 10 }) {
+749:           ForEach(this.getDisplayedMonthRecords(), (record: DailyPunchRecord) => {
+750:             Row() {
+751:               Column({ space: 2 }) {
+752:                 Text(this.getDateLabelWithoutWeekday(record.dateKey))
+753:                   .fontSize(15)
+754:                   .fontWeight(FontWeight.Medium)
+755:                   .fontColor('#132033');
+756:                 Text(this.getRecordTimeRangeText(record))
+757:                   .fontSize(12)
+758:                   .fontColor('#60708A');
+759:               }
+760: 
+761:               Column({ space: 2 }) {
+762:                 Text(this.formatMinutes(this.calculateWorkMinutes(record.punches)))
+763:                   .fontSize(18)
+764:                   .fontWeight(FontWeight.Bold)
+765:                   .fontColor('#132033');
+766:                 Text(record.punches.length.toString() + ' 次打�?)
+767:                   .fontSize(12)
+768:                   .fontColor('#60708A');
+769:               }
+770:               .alignItems(HorizontalAlign.End);
+771:             }
+772:             .width('100%')
+773:             .padding({ left: 14, right: 14, top: 14, bottom: 14 })
+774:             .backgroundColor('#F6F8FC')
+775:             .borderRadius(18)
+776:             .justifyContent(FlexAlign.SpaceBetween)
+777:             .alignItems(VerticalAlign.Center);
+778:           }, (record: DailyPunchRecord) => record.dateKey);
+779:         };
+780:       }
+781:     }
+782:     .width('100%')
+783:     .padding(16)
+784:     .borderRadius(24)
+785:     .backgroundColor('#FFFFFF')
+786:     .border({ width: 1, color: '#D8E0F0' })
+787:     .shadow({ radius: 14, color: '#12223C5C', offsetX: 0, offsetY: 4 });
+788:   }
+789: 
+790:   @Builder
+791:   buildRangeDialog() {

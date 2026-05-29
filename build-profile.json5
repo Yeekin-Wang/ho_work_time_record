@@ -1,0 +1,56 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\masqu\\.ohos\\config\\default_WorkingTimeRecord_pWylkWQH4JWe1AKmQjwJHCiEhzwuPZHAGO8f5bvyZRo=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001B2C14689F04F8359336B67B8317861BDC2160A8E803067BE356E05FD542CCBCA0BA63E973CBA864",
+          "profile": "C:\\Users\\masqu\\.ohos\\config\\default_WorkingTimeRecord_pWylkWQH4JWe1AKmQjwJHCiEhzwuPZHAGO8f5bvyZRo=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\masqu\\.ohos\\config\\default_WorkingTimeRecord_pWylkWQH4JWe1AKmQjwJHCiEhzwuPZHAGO8f5bvyZRo=.p12",
+          "storePassword": "0000001B3DFE19986FBD4643F1855F49C8A4427B4CD5D006077113E116531A55ABE633B52DE449462A556E"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "targetSdkVersion": "6.1.0(23)",
+        "compatibleSdkVersion": "6.1.0(23)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug",
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "main",
+      "srcPath": "./main",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

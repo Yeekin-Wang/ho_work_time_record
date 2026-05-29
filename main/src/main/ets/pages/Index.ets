@@ -6,6 +6,7 @@ import { SummaryItem } from '../model/SummaryItem';
 import { TimeUtils } from '../service/TimeUtils';
 import { StorageService } from '../service/StorageService';
 import { PunchCalculator } from '../service/PunchCalculator';
+import { CustomTimePickerDialog } from './CustomTimePickerDialog';
 
 @Entry
 @Component
@@ -34,6 +35,13 @@ struct Index {
   @State weekContentKey: number = 0;
   @State rangeDialogKey: number = 0;
   @State confirmDeleteIndex: number = -1;
+
+  // 自定义时间选择弹窗控制器（用于打卡时间编辑）
+  private timePickerController: CustomDialogController | null = null;
+  // 自定义时间选择弹窗控制器（用于排除时段选择）
+  private rangeTimePickerController: CustomDialogController | null = null;
+  // 自定义时间选择弹窗控制器（用于上班时间设置）
+  private workdayStartPickerController: CustomDialogController | null = null;
 
   // 2026年法定节假日
   private holidays2026: string[] = [
@@ -1517,34 +1525,55 @@ struct Index {
   openTimePicker(field: string): void {
     let currentValue: string = field === 'start' ? this.getStartTimeText() : this.getEndTimeText();
     let defaultValue: string = currentValue === '--:--' ? (field === 'start' ? '09:00' : '18:00') : currentValue;
-    let selectedDate: Date = TimeUtils.createTimePickerDate(defaultValue);
+    let minutes: number = TimeUtils.parseTimeToMinutes(defaultValue);
+    if (minutes < 0) {
+      minutes = 0;
+    }
+    let hour: number = Math.floor(minutes / 60);
+    let minute: number = minutes % 60;
 
-    this.getUIContext().showTimePickerDialog({
-      selected: selectedDate,
-      useMilitaryTime: true,
-      dateTimeOptions: { hour: '2-digit', minute: '2-digit' },
-      onAccept: (value: TimePickerResult) => {
-        if (value.hour != undefined && value.minute != undefined) {
-          this.applyPickedTime(field, value.hour, value.minute);
+    let pickedField: string = field;
+    this.timePickerController = new CustomDialogController({
+      builder: CustomTimePickerDialog({
+        title: field === 'start' ? '编辑上班时间' : '编辑下班时间',
+        selectedHour: hour,
+        selectedMinute: minute,
+        useMilitaryTime: true,
+        onConfirm: (h: number, m: number) => {
+          this.applyPickedTime(pickedField, h, m);
         }
-      }
+      }),
+      autoCancel: true,
+      customStyle: true,
+      alignment: DialogAlignment.Center,
+      backgroundColor: Color.Transparent,
+      backgroundBlurStyle: BlurStyle.NONE
     });
+    this.timePickerController.open();
   }
 
   openRangeTimePicker(isStart: boolean): void {
     let value: string = isStart ? this.rangeStartInput : this.rangeEndInput;
-    let selectedDate: Date = TimeUtils.createTimePickerDate(value);
-    this.getUIContext().showTimePickerDialog({
-      selected: selectedDate,
-      useMilitaryTime: true,
-      dateTimeOptions: { hour: '2-digit', minute: '2-digit' },
-      onAccept: (result: TimePickerResult) => {
-        if (result.hour != undefined && result.minute != undefined) {
-          let picked: string = TimeUtils.toTwoDigits(result.hour) + ':' + TimeUtils.toTwoDigits(result.minute);
-          if (isStart) {
+    let minutes: number = TimeUtils.parseTimeToMinutes(value);
+    if (minutes < 0) {
+      minutes = 0;
+    }
+    let hour: number = Math.floor(minutes / 60);
+    let minute: number = minutes % 60;
+
+    let isStartPicked: boolean = isStart;
+    this.rangeTimePickerController = new CustomDialogController({
+      builder: CustomTimePickerDialog({
+        title: isStart ? '选择开始时间' : '选择结束时间',
+        selectedHour: hour,
+        selectedMinute: minute,
+        useMilitaryTime: true,
+        onConfirm: (h: number, m: number) => {
+          let picked: string = TimeUtils.toTwoDigits(h) + ':' + TimeUtils.toTwoDigits(m);
+          if (isStartPicked) {
             this.rangeStartInput = picked;
             // 修改开始时间后，自动将结束时间设为开始时间 + 30 分钟
-            let startMinutes: number = result.hour * 60 + result.minute;
+            let startMinutes: number = h * 60 + m;
             let endMinutes: number = startMinutes + 30;
             if (endMinutes >= 1440) {
               endMinutes = 1439;
@@ -1557,23 +1586,42 @@ struct Index {
           }
           this.rangeDialogKey++;
         }
-      }
+      }),
+      autoCancel: true,
+      customStyle: true,
+      alignment: DialogAlignment.Center,
+      backgroundColor: Color.Transparent,
+      backgroundBlurStyle: BlurStyle.NONE
     });
+    this.rangeTimePickerController.open();
   }
 
   openWorkdayStartTimePicker(): void {
-    let selectedDate: Date = TimeUtils.createTimePickerDate(this.workdayStartTime);
-    this.getUIContext().showTimePickerDialog({
-      selected: selectedDate,
-      useMilitaryTime: true,
-      dateTimeOptions: { hour: '2-digit', minute: '2-digit' },
-      onAccept: (result: TimePickerResult) => {
-        if (result.hour != undefined && result.minute != undefined) {
-          this.workdayStartTime = TimeUtils.toTwoDigits(result.hour) + ':' + TimeUtils.toTwoDigits(result.minute);
+    let minutes: number = TimeUtils.parseTimeToMinutes(this.workdayStartTime);
+    if (minutes < 0) {
+      minutes = 0;
+    }
+    let hour: number = Math.floor(minutes / 60);
+    let minute: number = minutes % 60;
+
+    this.workdayStartPickerController = new CustomDialogController({
+      builder: CustomTimePickerDialog({
+        title: '设置上班时间',
+        selectedHour: hour,
+        selectedMinute: minute,
+        useMilitaryTime: true,
+        onConfirm: (h: number, m: number) => {
+          this.workdayStartTime = TimeUtils.toTwoDigits(h) + ':' + TimeUtils.toTwoDigits(m);
           this.persistState();
         }
-      }
+      }),
+      autoCancel: true,
+      customStyle: true,
+      alignment: DialogAlignment.Center,
+      backgroundColor: Color.Transparent,
+      backgroundBlurStyle: BlurStyle.NONE
     });
+    this.workdayStartPickerController.open();
   }
 
   applyPickedTime(field: string, hour: number, minute: number): void {
@@ -1666,16 +1714,6 @@ struct Index {
       this.excludedRanges = nextRanges;
     });
     this.persistState();
-  }
-
-  createTimePickerDate(value: string): Date {
-    let minutes: number = TimeUtils.parseTimeToMinutes(value);
-    if (minutes < 0) {
-      minutes = 0;
-    }
-    let hour: number = Math.floor(minutes / 60);
-    let minute: number = minutes % 60;
-    return new Date(2024, 0, 1, hour, minute, 0);
   }
 
   getCurrentMinuteOfDay(): number {

@@ -35,6 +35,8 @@ struct Index {
   @State weekContentKey: number = 0;
   @State rangeDialogKey: number = 0;
   @State confirmDeleteIndex: number = -1;
+  // summary 刷新触发器 - 在影响平均工时的操作后自增，强制 ForEach 重建 summary 卡片
+  @State summaryRefreshKey: number = 0;
 
   // 自定义时间选择弹窗控制器（用于打卡时间编辑）
   private timePickerController: CustomDialogController | null = null;
@@ -339,6 +341,7 @@ struct Index {
           let offsetX: number = event.offsetX - this.settingsTouchStartX;
           if (offsetX > 80 || offsetX < -80) {
             this.showSettingsPage = false;
+            this.summaryRefreshKey++;
             this.confirmDeleteIndex = -1;
           }
         })
@@ -373,6 +376,7 @@ struct Index {
             .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
             .onClick(() => {
               this.showSettingsPage = false;
+              this.summaryRefreshKey++;
               this.confirmDeleteIndex = -1;
             });
         }
@@ -566,6 +570,7 @@ struct Index {
         .selectedColor(this.darkModeEnabled ? '#8B9EF5' : '#2E67F8')
         .onChange((value: number) => {
           this.targetAverageHours = Math.round(value * 10) / 10;
+          this.summaryRefreshKey++;
           this.persistState();
         });
 
@@ -883,6 +888,7 @@ struct Index {
         if (collapseAfterSelect) {
           this.calendarExpanded = false;
         }
+        this.summaryRefreshKey++;
         this.persistState();
       });
     }
@@ -1022,7 +1028,7 @@ struct Index {
           .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
           .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
           .animation({ duration: 220, curve: Curve.EaseInOut });
-        }, (item: SummaryItem) => item.title);
+        }, (item: SummaryItem) => item.title + '_' + this.summaryRefreshKey.toString());
       }
       .width('100%');
 
@@ -1034,7 +1040,8 @@ struct Index {
           .fontSize(22)
           .fontWeight(FontWeight.Bold)
           .fontColor(this.getDifferenceColor())
-          .animation({ duration: 200, curve: Curve.EaseInOut });
+          .animation({ duration: 200, curve: Curve.EaseInOut })
+          .key('diff_' + this.summaryRefreshKey.toString());
       }
       .width('100%')
       .padding(16)
@@ -1063,9 +1070,12 @@ struct Index {
       this.pref = null;
     }
 
-    // 始终用最新的 mock 全月数据覆盖，确保日历中所有工作日都有打卡记录
-    this.records = PunchCalculator.createMockRecords(this.selectedDateKey);
+    // 如果从持久化加载后 records 为空（首次使用），则用 mock 数据填充
+    if (this.records.length === 0) {
+      this.records = PunchCalculator.createMockRecords(this.selectedDateKey);
+    }
     this.weekContentKey++;
+    this.summaryRefreshKey++;
     this.persistState();
   }
 
@@ -1265,6 +1275,7 @@ struct Index {
     this.syncDisplayMonthToSelectedDate();
     this.calendarExpanded = false;
     this.calendarWeekOffset = 0;
+    this.summaryRefreshKey++;
     this.persistState();
   }
 
@@ -1306,6 +1317,7 @@ struct Index {
     this.displayMonth = nextMonth;
     this.calendarWeekOffset = 0;
     this.monthContentKey++;
+    this.summaryRefreshKey++;
     this.persistState();
   }
 
@@ -1340,6 +1352,7 @@ struct Index {
     this.displayMonth = nextMonth;
     this.calendarWeekOffset = 0;
     this.monthContentKey++;
+    this.summaryRefreshKey++;
     this.persistState();
   }
 
@@ -1612,6 +1625,7 @@ struct Index {
         useMilitaryTime: true,
         onConfirm: (h: number, m: number) => {
           this.workdayStartTime = TimeUtils.toTwoDigits(h) + ':' + TimeUtils.toTwoDigits(m);
+          this.summaryRefreshKey++;
           this.persistState();
         }
       }),
@@ -1661,6 +1675,7 @@ struct Index {
     nextPunches.sort((left: number, right: number) => left - right);
     this.replaceRecordForDate(this.selectedDateKey, nextPunches);
     this.playPunchCardFeedback();
+    this.summaryRefreshKey++;
     this.persistState();
   }
 
@@ -1696,6 +1711,7 @@ struct Index {
     });
     this.excludedRanges = nextRanges;
     this.showRangeDialog = false;
+    this.summaryRefreshKey++;
     this.persistState();
   }
 
@@ -1713,6 +1729,7 @@ struct Index {
     this.getUIContext().animateTo({ duration: 300, curve: Curve.EaseInOut }, () => {
       this.excludedRanges = nextRanges;
     });
+    this.summaryRefreshKey++;
     this.persistState();
   }
 

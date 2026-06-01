@@ -35,6 +35,8 @@ struct Index {
   @State weekContentKey: number = 0;
   @State rangeDialogKey: number = 0;
   @State confirmDeleteIndex: number = -1;
+  // 当前编辑的排除时段索引（-1 表示新增模式）
+  @State editRangeIndex: number = -1;
   // summary 刷新触发器 - 在影响平均工时的操作后自增，强制 ForEach 重建 summary 卡片
   @State summaryRefreshKey: number = 0;
 
@@ -88,12 +90,20 @@ struct Index {
             .height('100%')
             .backgroundColor(this.darkModeEnabled ? '#80000000' : '#660C1729')
             .animation({ duration: 220, curve: Curve.EaseInOut })
+            .gesture(
+              PanGesture({ direction: PanDirection.Horizontal })
+                .onActionEnd((_event: GestureEvent) => {
+                  this.showRangeDialog = false;
+                  this.editRangeIndex = -1;
+                })
+            )
             .onClick(() => {
               this.showRangeDialog = false;
+              this.editRangeIndex = -1;
             });
 
           Column({ space: 16 }) {
-            Text('新增排除时段')
+            Text(this.editRangeIndex >= 0 ? '编辑排除时段' : '新增排除时段')
               .fontSize(22)
               .fontWeight(FontWeight.Bold)
               .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
@@ -159,9 +169,10 @@ struct Index {
                 .borderRadius(20)
                 .onClick(() => {
                   this.showRangeDialog = false;
+                  this.editRangeIndex = -1;
                 });
 
-              Button('添加')
+              Button(this.editRangeIndex >= 0 ? '保存' : '添加')
                 .layoutWeight(1)
                 .height(48)
                 .fontSize(16)
@@ -237,12 +248,6 @@ struct Index {
       colors: this.darkModeEnabled ? [['#1A1F2E', 0.0], ['#242B3D', 1.0]] : [['#F9FBFF', 0.0], ['#F2F5FB', 1.0]]
     })
     .animation({ duration: 220, curve: Curve.EaseInOut })
-    .gesture(
-      PanGesture({ direction: PanDirection.Horizontal })
-        .onActionEnd((event: GestureEvent) => {
-          this.handleHorizontalBackGesture(event.offsetX);
-        })
-    )
     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM]);
   }
 
@@ -430,6 +435,7 @@ struct Index {
         .onClick(() => {
           this.rangeStartInput = '12:00';
           this.rangeEndInput = '13:00';
+          this.editRangeIndex = -1;
           this.rangeDialogKey++;
           this.showRangeDialog = true;
           this.confirmDeleteIndex = -1;
@@ -508,11 +514,18 @@ struct Index {
             .alignItems(VerticalAlign.Center)
             .transition(TransitionEffect.translate({ x: -20, y: 0 }).combine(TransitionEffect.OPACITY))
             .onClick(() => {
-              // 点击任意一行，取消当前确认状态（含其他行）
+              // 点击某一行：如果处于确认删除状态则取消确认，否则进入编辑模式
               if (this.confirmDeleteIndex >= 0) {
                 this.getUIContext().animateTo({ duration: 200, curve: Curve.EaseInOut }, () => {
                   this.confirmDeleteIndex = -1;
                 });
+              } else {
+                // 进入编辑模式：将当前时段的起止时间填入弹窗输入
+                this.rangeStartInput = range.start;
+                this.rangeEndInput = range.end;
+                this.editRangeIndex = index;
+                this.rangeDialogKey++;
+                this.showRangeDialog = true;
               }
             });
           }, (range: ExcludedRange) => range.start + '_' + range.end);
@@ -1297,15 +1310,6 @@ struct Index {
     }
   }
 
-  handleHorizontalBackGesture(offsetX: number): void {
-    if (!this.showSettingsPage) {
-      return;
-    }
-    if (offsetX > 80 || offsetX < -80) {
-      this.showSettingsPage = false;
-    }
-  }
-
   goToPreviousMonth(): void {
     let nextMonth: number = this.displayMonth - 1;
     let nextYear: number = this.displayYear;
@@ -1323,10 +1327,33 @@ struct Index {
 
   goToPreviousWeek(): void {
     this.calendarWeekOffset -= 1;
+    // 同步更新 displayMonth 以支持跨月显示
+    this.syncDisplayMonthToWeekOffset();
   }
 
   goToNextWeek(): void {
     this.calendarWeekOffset += 1;
+    // 同步更新 displayMonth 以支持跨月显示
+    this.syncDisplayMonthToWeekOffset();
+  }
+
+  /**
+   * 根据 calendarWeekOffset 计算偏移后的周一，若跨月则更新 displayYear/displayMonth
+   */
+  syncDisplayMonthToWeekOffset(): void {
+    let selectedDate: Date | null = TimeUtils.parseDateKey(this.selectedDateKey);
+    if (selectedDate === null) {
+      return;
+    }
+    let dayOfWeek: number = selectedDate.getDay();
+    let weekStartOffset: number = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    let monday: Date = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + weekStartOffset);
+    let targetMonday: Date = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + this.calendarWeekOffset * 7);
+
+    if (targetMonday.getFullYear() !== this.displayYear || targetMonday.getMonth() !== this.displayMonth) {
+      this.displayYear = targetMonday.getFullYear();
+      this.displayMonth = targetMonday.getMonth();
+    }
   }
 
   goToNextMonth(): void {
@@ -1408,31 +1435,38 @@ struct Index {
   }
 
   getCurrentWeekSlots(allSlots: CalendarSlot[]): CalendarSlot[] {
-    let selectedIndex: number = 0;
-    let index: number = 0;
-    while (index < allSlots.length) {
-      if (allSlots[index].dateKey === this.selectedDateKey) {
-        selectedIndex = index;
-        break;
-      }
-      index += 1;
+    // 基于选中日期计算偏移后的周一日期
+    let selectedDate: Date | null = TimeUtils.parseDateKey(this.selectedDateKey);
+    if (selectedDate === null) {
+      return [];
     }
 
-    let rowStart: number = Math.floor(selectedIndex / 7) * 7;
-    let adjustedStart: number = rowStart + this.calendarWeekOffset * 7;
-    if (adjustedStart < 0) {
-      adjustedStart = 0;
-    }
-    let maxStart: number = Math.max(0, Math.floor((allSlots.length - 1) / 7) * 7);
-    if (adjustedStart > maxStart) {
-      adjustedStart = maxStart;
-    }
+    // 计算选中日期是周几（周一=0, 周日=6）
+    let dayOfWeek: number = selectedDate.getDay();
+    let weekStartOffset: number = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
 
+    // 计算当前周的周一
+    let monday: Date = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + weekStartOffset);
+    // 加上 calendarWeekOffset 周的偏移
+    let targetMonday: Date = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + this.calendarWeekOffset * 7);
+
+    // 构建一周7天的 slots（注：displayYear/displayMonth 由调用方在 goToPreviousWeek/goToNextWeek 中更新）
     let row: CalendarSlot[] = [];
-    let innerIndex: number = adjustedStart;
-    while (innerIndex < adjustedStart + 7 && innerIndex < allSlots.length) {
-      row.push(allSlots[innerIndex]);
-      innerIndex += 1;
+    let todayKey: string = TimeUtils.createDateKey(new Date());
+    for (let i: number = 0; i < 7; i++) {
+      let date: Date = new Date(targetMonday.getFullYear(), targetMonday.getMonth(), targetMonday.getDate() + i);
+      let dateKey: string = TimeUtils.createDateKey(date);
+      // 判断是否在当前月份（用于样式控制）
+      let inCurrentMonth: boolean = (date.getFullYear() === this.displayYear && date.getMonth() === this.displayMonth);
+      let slot: CalendarSlot = new CalendarSlot(
+        dateKey,
+        date.getDate(),
+        dateKey,
+        inCurrentMonth,
+        dateKey === todayKey,
+        this.getRecordPunchCount(dateKey)
+      );
+      row.push(slot);
     }
     return row;
   }
@@ -1685,10 +1719,15 @@ struct Index {
     if (startMinute < 0 || endMinute <= startMinute) {
       return;
     }
-    // 检查与已有排除时段是否有交集
+    // 检查与已有排除时段是否有交集（编辑模式下跳过自身）
     let hasOverlap: boolean = false;
     let idx: number = 0;
     while (idx < this.excludedRanges.length) {
+      // 编辑模式：跳过当前正在编辑的时段，不与自身比较
+      if (this.editRangeIndex >= 0 && idx === this.editRangeIndex) {
+        idx++;
+        continue;
+      }
       let existing: ExcludedRange = this.excludedRanges[idx];
       let existStart: number = TimeUtils.parseTimeToMinutes(existing.start);
       let existEnd: number = TimeUtils.parseTimeToMinutes(existing.end);
@@ -1704,13 +1743,20 @@ struct Index {
       return;
     }
     let nextRanges: ExcludedRange[] = PunchCalculator.copyRanges(this.excludedRanges);
-    nextRanges.push(new ExcludedRange(this.rangeStartInput, this.rangeEndInput));
+    if (this.editRangeIndex >= 0 && this.editRangeIndex < nextRanges.length) {
+      // 编辑模式：更新已有时段
+      nextRanges[this.editRangeIndex] = new ExcludedRange(this.rangeStartInput, this.rangeEndInput);
+    } else {
+      // 新增模式：追加新时段
+      nextRanges.push(new ExcludedRange(this.rangeStartInput, this.rangeEndInput));
+    }
     // 按开始时间排序
     nextRanges.sort((a: ExcludedRange, b: ExcludedRange): number => {
       return TimeUtils.parseTimeToMinutes(a.start) - TimeUtils.parseTimeToMinutes(b.start);
     });
     this.excludedRanges = nextRanges;
     this.showRangeDialog = false;
+    this.editRangeIndex = -1;
     this.summaryRefreshKey++;
     this.persistState();
   }
@@ -1833,5 +1879,28 @@ struct Index {
       index += 1;
     }
     return -1;
+  }
+
+  onBackPress(): boolean {
+    // 弹窗优先：排除时段弹窗打开时，先关弹窗
+    if (this.showRangeDialog) {
+      this.showRangeDialog = false;
+      this.editRangeIndex = -1;
+      return true;
+    }
+
+    // 设置页打开时，关闭设置页
+    if (this.showSettingsPage) {
+      this.showSettingsPage = false;
+      return true;
+    }
+
+    // 日历展开时，折叠日历
+    if (this.calendarExpanded) {
+      this.calendarExpanded = false;
+      return true;
+    }
+
+    return false;
   }
 }

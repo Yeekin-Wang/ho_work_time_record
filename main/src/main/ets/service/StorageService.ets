@@ -102,6 +102,20 @@ export class StorageService {
     }
   }
 
+  /**
+   * 清空所有打卡记录（保留其他配置）
+   */
+  clearAllRecords(state: PersistState): void {
+    state.records = [];
+    if (this.pref !== null) {
+      try {
+        this.pref.putSync(this.prefRecords, '');
+        this.pref.flush();
+      } catch (_error) {
+      }
+    }
+  }
+
   private getDisplayMonthKey(year: number, month: number): string {
     return year.toString() + '-' + TimeUtils.toTwoDigits(month + 1);
   }

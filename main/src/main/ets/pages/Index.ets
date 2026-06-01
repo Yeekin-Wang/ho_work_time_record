@@ -1,10 +1,16 @@
 import { preferences } from '@kit.ArkData';
+import { picker, fileIo, fileUri } from '@kit.CoreFileKit';
+import { common } from '@kit.AbilityKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+import { util } from '@kit.ArkTS';
+import { zlib } from '@kit.BasicServicesKit';
+import { promptAction } from '@kit.ArkUI';
 import { ExcludedRange } from '../model/ExcludedRange';
 import { DailyPunchRecord } from '../model/DailyPunchRecord';
 import { CalendarSlot } from '../model/CalendarSlot';
 import { SummaryItem } from '../model/SummaryItem';
 import { TimeUtils } from '../service/TimeUtils';
-import { StorageService } from '../service/StorageService';
+import { StorageService, PersistState } from '../service/StorageService';
 import { PunchCalculator } from '../service/PunchCalculator';
 import { CustomTimePickerDialog } from './CustomTimePickerDialog';
 
@@ -320,6 +326,7 @@ struct Index {
           this.buildExcludedRangesCard();
           this.buildTargetHoursCard();
           this.buildDarkModeCard();
+          this.buildDataManagementCard();
         }
         .padding({ left: 16, right: 16, bottom: 28 })
         .width('100%')
@@ -670,6 +677,97 @@ struct Index {
           .onChange((isOn: boolean) => {
             this.darkModeEnabled = isOn;
             this.persistState();
+          });
+      }
+      .width('100%')
+      .justifyContent(FlexAlign.SpaceBetween)
+      .alignItems(VerticalAlign.Center);
+    }
+    .width('100%')
+    .padding(16)
+    .borderRadius(24)
+    .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
+    .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
+    .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
+    .animation({ duration: 220, curve: Curve.EaseInOut });
+  }
+
+  @Builder
+  buildDataManagementCard() {
+    Column({ space: 14 }) {
+      Text('数据管理')
+        .fontSize(12)
+        .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+
+      // 导出导入数据
+      Row() {
+        Column({ space: 4 }) {
+          Text('导出/导入数据')
+            .fontSize(22)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
+          Text('导出打卡数据为CSV文件，或从CSV文件导入')
+            .fontSize(13)
+            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+        }
+        .layoutWeight(1)
+        .alignItems(HorizontalAlign.Start);
+      }
+      .width('100%')
+      .justifyContent(FlexAlign.SpaceBetween)
+      .alignItems(VerticalAlign.Center);
+
+      Row({ space: 12 }) {
+        Button('导出数据')
+          .layoutWeight(1)
+          .height(40)
+          .fontSize(14)
+          .fontWeight(FontWeight.Medium)
+          .fontColor('#FFFFFF')
+          .backgroundColor('#2E67F8')
+          .borderRadius(20)
+          .onClick(() => {
+            this.exportRecordsToCsv();
+          });
+
+        Button('导入数据')
+          .layoutWeight(1)
+          .height(40)
+          .fontSize(14)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
+          .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
+          .borderRadius(20)
+          .onClick(() => {
+            this.importRecordsFromCsv();
+          });
+      }
+      .width('100%');
+
+      // 清空打卡数据
+      Row() {
+        Column({ space: 4 }) {
+          Text('清空打卡数据')
+            .fontSize(22)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
+          Text('清除所有打卡记录，设置项配置不受影响')
+            .fontSize(13)
+            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+        }
+        .layoutWeight(1)
+        .alignItems(HorizontalAlign.Start);
+
+        Button('清空')
+          .height(36)
+          .fontSize(14)
+          .fontWeight(FontWeight.Medium)
+          .fontColor('#FFFFFF')
+          .backgroundColor('#D85353')
+          .borderRadius(18)
+          .padding({ left: 16, right: 16 })
+          .onClick(() => {
+            this.confirmClearAllRecords();
           });
       }
       .width('100%')
@@ -1902,5 +2000,398 @@ struct Index {
     }
 
     return false;
+  }
+
+  /**
+   * 导出打卡记录为包含多个CSV的ZIP包（按月拆分），无数据时导出空模板CSV
+   */
+  private async exportRecordsToCsv(): Promise<void> {
+    try {
+      let context: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext;
+      let now: Date = new Date();
+      let timeStamp: string = now.getFullYear().toString() +
+        TimeUtils.toTwoDigits(now.getMonth() + 1) +
+        TimeUtils.toTwoDigits(now.getDate()) + '_' +
+        TimeUtils.toTwoDigits(now.getHours()) +
+        TimeUtils.toTwoDigits(now.getMinutes()) +
+        TimeUtils.toTwoDigits(now.getSeconds());
+
+      let baseName: string = '牛马工时簿_打卡记录_' + timeStamp;
+      let tempDir: string = context.cacheDir + '/' + baseName;
+      let zipPath: string = context.cacheDir + '/' + baseName + '.zip';
+
+      // 创建临时目录
+      if (!fileIo.accessSync(tempDir)) {
+        fileIo.mkdirSync(tempDir);
+      }
+
+      // 按月份分组
+      let monthMap: Map<string, DailyPunchRecord[]> = new Map();
+      let idx: number = 0;
+      while (idx < this.records.length) {
+        let record: DailyPunchRecord = this.records[idx];
+        let date: Date | null = TimeUtils.parseDateKey(record.dateKey);
+        if (date !== null) {
+          let monthKey: string = date.getFullYear().toString() + '-' + TimeUtils.toTwoDigits(date.getMonth() + 1);
+          let group: DailyPunchRecord[] | undefined = monthMap.get(monthKey);
+          if (group === undefined) {
+            group = [];
+            monthMap.set(monthKey, group);
+          }
+          group.push(record);
+        }
+        idx += 1;
+      }
+
+      let sortedMonths: string[] = Array.from(monthMap.keys()).sort();
+
+      // 如果没有数据，生成一个空模板 CSV
+      if (sortedMonths.length === 0) {
+        let templateLines: string[] = [];
+        templateLines.push('\uFEFF日期,上班打卡时间,下班打卡时间');
+        templateLines.push('# 说明：');
+        templateLines.push('# 1. 日期格式为 YYYY-MM-DD，例如 2026-06-01');
+        templateLines.push('# 2. 打卡时间格式为 HH:mm，例如 09:00');
+        templateLines.push('# 3. 同一日期请填写在同一行，上班时间和下班时间分列填写');
+        templateLines.push('# 4. 如果某天只有一次打卡，下班时间留空即可');
+        templateLines.push('# 5. 示例：');
+        templateLines.push('2026-06-01,09:00,18:30');
+        let templateContent: string = templateLines.join('\r\n');
+        let templateFile: fileIo.File = fileIo.openSync(tempDir + '/导入模板.csv', fileIo.OpenMode.CREATE | fileIo.OpenMode.READ_WRITE);
+        fileIo.writeSync(templateFile.fd, templateContent);
+        fileIo.closeSync(templateFile);
+      } else {
+        // 有数据，按月份生成 CSV 文件
+        let monthIdx: number = 0;
+        while (monthIdx < sortedMonths.length) {
+          let monthKey: string = sortedMonths[monthIdx];
+          let monthRecords: DailyPunchRecord[] = monthMap.get(monthKey) as DailyPunchRecord[];
+          monthRecords.sort((a: DailyPunchRecord, b: DailyPunchRecord) => {
+            return a.dateKey.localeCompare(b.dateKey);
+          });
+
+          let csvLines: string[] = [];
+          csvLines.push('\uFEFF日期,上班打卡时间,下班打卡时间');
+          let recIdx: number = 0;
+          while (recIdx < monthRecords.length) {
+            let record: DailyPunchRecord = monthRecords[recIdx];
+            let firstPunch: string = record.punches.length > 0 ?
+              TimeUtils.formatMinuteAsTime(record.punches[0]) : '';
+            let lastPunch: string = record.punches.length > 1 ?
+              TimeUtils.formatMinuteAsTime(record.punches[record.punches.length - 1]) : '';
+            csvLines.push(record.dateKey + ',' + firstPunch + ',' + lastPunch);
+            recIdx += 1;
+          }
+
+          let csvContent: string = csvLines.join('\r\n');
+          let csvPath: string = tempDir + '/' + monthKey + '.csv';
+          let csvFile: fileIo.File = fileIo.openSync(csvPath, fileIo.OpenMode.CREATE | fileIo.OpenMode.READ_WRITE);
+          fileIo.writeSync(csvFile.fd, csvContent);
+          fileIo.closeSync(csvFile);
+          monthIdx += 1;
+        }
+      }
+
+      // 打包为 ZIP 文件
+      let options: zlib.Options = {};
+      await zlib.compressFile(tempDir, zipPath, options);
+
+      // 使用 DocumentViewPicker 让用户选择保存位置
+      let documentSaveOptions: picker.DocumentSaveOptions = new picker.DocumentSaveOptions();
+      documentSaveOptions.newFileNames = [baseName + '.zip'];
+      documentSaveOptions.fileSuffixChoices = ['ZIP 文件|.zip'];
+
+      let documentViewPicker: picker.DocumentViewPicker = new picker.DocumentViewPicker(context);
+      let saveResult: string[] = await documentViewPicker.save(documentSaveOptions);
+
+      if (saveResult.length > 0) {
+        let uri: string = saveResult[0];
+        // 将打包好的 ZIP 复制到用户选择的路径
+        let destFile: fileIo.File = fileIo.openSync(uri, fileIo.OpenMode.CREATE | fileIo.OpenMode.READ_WRITE);
+        let srcFile: fileIo.File = fileIo.openSync(zipPath, fileIo.OpenMode.READ_ONLY);
+        fileIo.copyFileSync(srcFile.fd, destFile.fd);
+        fileIo.closeSync(srcFile);
+        fileIo.closeSync(destFile);
+        this.getUIContext().getPromptAction().showToast({ message: '导出成功' });
+      }
+
+      // 清理临时文件
+      this.cleanTempFiles(tempDir, zipPath);
+    } catch (error) {
+      let err: BusinessError = error as BusinessError;
+      if (err.code !== 13900015) {
+        this.getUIContext().getPromptAction().showToast({ message: '导出失败: ' + err.message });
+      }
+    }
+  }
+
+  /**
+   * 清理导出时生成的临时文件
+   */
+  private cleanTempFiles(tempDir: string, zipPath: string): void {
+    try {
+      if (fileIo.accessSync(tempDir)) {
+        let files: string[] = fileIo.listFileSync(tempDir);
+        let idx: number = 0;
+        while (idx < files.length) {
+          fileIo.unlinkSync(tempDir + '/' + files[idx]);
+          idx += 1;
+        }
+        fileIo.rmdirSync(tempDir);
+      }
+      if (fileIo.accessSync(zipPath)) {
+        fileIo.unlinkSync(zipPath);
+      }
+    } catch (_error) {
+      // 临时文件清理失败不影响主流程
+    }
+  }
+
+  /**
+   * 解析单个 CSV 文件内容为打卡记录列表
+   */
+  private parseCsvContent(csvContent: string): DailyPunchRecord[] {
+    let result: DailyPunchRecord[] = [];
+    // 移除 BOM
+    if (csvContent.charCodeAt(0) === 0xFEFF) {
+      csvContent = csvContent.substring(1);
+    }
+    let lines: string[] = csvContent.split('\n');
+    let lineIdx: number = 0;
+    while (lineIdx < lines.length) {
+      let line: string = lines[lineIdx].trim();
+      // 跳过空行、标题行、注释行
+      if (line.length === 0 || line.startsWith('日期') || line.startsWith('#')) {
+        lineIdx += 1;
+        continue;
+      }
+      let parts: string[] = line.split(',');
+      if (parts.length >= 2) {
+        let dateKey: string = parts[0].trim();
+        let morningMinutes: number = parts[1].trim().length > 0 ?
+          TimeUtils.parseTimeToMinutes(parts[1].trim()) : -1;
+        let eveningMinutes: number = (parts.length >= 3 && parts[2].trim().length > 0) ?
+          TimeUtils.parseTimeToMinutes(parts[2].trim()) : -1;
+
+        if (dateKey.length === 10) {
+          let punches: number[] = [];
+          if (morningMinutes >= 0) {
+            punches.push(morningMinutes);
+          }
+          if (eveningMinutes >= 0 && eveningMinutes !== morningMinutes) {
+            punches.push(eveningMinutes);
+          }
+          if (punches.length > 0) {
+            punches.sort((a: number, b: number) => a - b);
+            result.push(new DailyPunchRecord(dateKey, punches));
+          }
+        }
+      }
+      lineIdx += 1;
+    }
+    return result;
+  }
+
+  /**
+   * 从 CSV 文件或 ZIP 包导入打卡记录
+   */
+  private async importRecordsFromCsv(): Promise<void> {
+    try {
+      let context: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext;
+      let documentSelectOptions: picker.DocumentSelectOptions = new picker.DocumentSelectOptions();
+      documentSelectOptions.maxSelectNumber = 1;
+      documentSelectOptions.fileSuffixFilters = ['.csv', '.zip'];
+
+      let documentViewPicker: picker.DocumentViewPicker = new picker.DocumentViewPicker(context);
+      let selectResult: string[] = await documentViewPicker.select(documentSelectOptions);
+
+      if (selectResult.length > 0) {
+        let uri: string = selectResult[0];
+        let allImportedRecords: DailyPunchRecord[] = [];
+
+        // 判断是 .zip 还是 .csv
+        if (uri.toLowerCase().endsWith('.zip')) {
+          // ---- 导入 ZIP 包 ----
+          let tempZipPath: string = context.cacheDir + '/import_temp.zip';
+          let tempExtractDir: string = context.cacheDir + '/import_temp';
+
+          // 复制到沙箱
+          let srcFile: fileIo.File = fileIo.openSync(uri, fileIo.OpenMode.READ_ONLY);
+          let destFile: fileIo.File = fileIo.openSync(tempZipPath, fileIo.OpenMode.CREATE | fileIo.OpenMode.READ_WRITE);
+          fileIo.copyFileSync(srcFile.fd, destFile.fd);
+          fileIo.closeSync(srcFile);
+          fileIo.closeSync(destFile);
+
+          // 创建解压目录
+          if (!fileIo.accessSync(tempExtractDir)) {
+            fileIo.mkdirSync(tempExtractDir);
+          }
+
+          // 解压 ZIP
+          let options: zlib.Options = {};
+          await zlib.decompressFile(tempZipPath, tempExtractDir, options);
+
+          // 读取解压目录下所有 CSV 文件
+          let csvFiles: string[] = fileIo.listFileSync(tempExtractDir);
+          let fIdx: number = 0;
+          while (fIdx < csvFiles.length) {
+            let fileName: string = csvFiles[fIdx];
+            if (fileName.toLowerCase().endsWith('.csv')) {
+              let filePath: string = tempExtractDir + '/' + fileName;
+              let csvContent: string = fileIo.readTextSync(filePath);
+              let parsed: DailyPunchRecord[] = this.parseCsvContent(csvContent);
+              let pIdx: number = 0;
+              while (pIdx < parsed.length) {
+                allImportedRecords.push(parsed[pIdx]);
+                pIdx += 1;
+              }
+            }
+            fIdx += 1;
+          }
+
+          // 清理临时文件
+          this.cleanImportTempFiles(tempZipPath, tempExtractDir);
+        } else {
+          // ---- 导入 CSV 文件 ----
+          let file: fileIo.File = fileIo.openSync(uri, fileIo.OpenMode.READ_ONLY);
+          let stat = fileIo.statSync(file.fd);
+          let buffer: ArrayBuffer = new ArrayBuffer(stat.size);
+          let readLen: number = fileIo.readSync(file.fd, buffer);
+          fileIo.closeSync(file);
+
+          let decoder: util.TextDecoder = util.TextDecoder.create('utf-8');
+          let uint8Array: Uint8Array = new Uint8Array(buffer.slice(0, readLen));
+          let csvContent: string = decoder.decodeToString(uint8Array);
+
+          allImportedRecords = this.parseCsvContent(csvContent);
+        }
+
+        if (allImportedRecords.length > 0) {
+          let mergedRecords: DailyPunchRecord[] = this.mergeImportRecords(allImportedRecords);
+          this.records = mergedRecords;
+          this.persistState();
+          this.summaryRefreshKey++;
+          this.monthContentKey++;
+          this.weekContentKey++;
+          this.getUIContext().getPromptAction().showToast({ message: '导入成功，共 ' + allImportedRecords.length.toString() + ' 天数据' });
+        } else {
+          this.getUIContext().getPromptAction().showToast({ message: '未解析到有效打卡数据' });
+        }
+      }
+    } catch (error) {
+      let err: BusinessError = error as BusinessError;
+      if (err.code !== 13900015) {
+        this.getUIContext().getPromptAction().showToast({ message: '导入失败: ' + err.message });
+      }
+    }
+  }
+
+  /**
+   * 清理导入时生成的临时文件
+   */
+  private cleanImportTempFiles(tempZipPath: string, tempDir: string): void {
+    try {
+      if (fileIo.accessSync(tempDir)) {
+        let files: string[] = fileIo.listFileSync(tempDir);
+        let idx: number = 0;
+        while (idx < files.length) {
+          fileIo.unlinkSync(tempDir + '/' + files[idx]);
+          idx += 1;
+        }
+        fileIo.rmdirSync(tempDir);
+      }
+      if (fileIo.accessSync(tempZipPath)) {
+        fileIo.unlinkSync(tempZipPath);
+      }
+    } catch (_error) {
+    }
+  }
+
+  /**
+   * 合并导入的记录到现有记录（导入数据覆盖当天对应数据）
+   */
+  private mergeImportRecords(importRecords: DailyPunchRecord[]): DailyPunchRecord[] {
+    // 先复制一份现有记录，同时标记是否被覆盖
+    let result: DailyPunchRecord[] = [];
+    let idx: number = 0;
+    while (idx < this.records.length) {
+      // 检查导入数据中是否有同一天的记录
+      let matched: boolean = false;
+      let impIdx: number = 0;
+      while (impIdx < importRecords.length) {
+        if (importRecords[impIdx].dateKey === this.records[idx].dateKey) {
+          matched = true;
+          break;
+        }
+        impIdx += 1;
+      }
+      // 只有未被覆盖的记录才保留
+      if (!matched) {
+        result.push(new DailyPunchRecord(this.records[idx].dateKey,
+          PunchCalculator.copyPunches(this.records[idx].punches)));
+      }
+      idx += 1;
+    }
+
+    // 直接追加导入数据
+    let impIdx: number = 0;
+    while (impIdx < importRecords.length) {
+      result.push(new DailyPunchRecord(importRecords[impIdx].dateKey,
+        PunchCalculator.copyPunches(importRecords[impIdx].punches)));
+      impIdx += 1;
+    }
+
+    // 按日期排序
+    result.sort((a: DailyPunchRecord, b: DailyPunchRecord) => {
+      return a.dateKey.localeCompare(b.dateKey);
+    });
+
+    return result;
+  }
+
+  /**
+   * 确认清空所有打卡数据
+   */
+  private confirmClearAllRecords(): void {
+    let context: UIContext = this.getUIContext();
+    context.getPromptAction().showDialog({
+      title: '确认清空',
+      message: '确定要清空所有打卡数据吗？此操作不可恢复，设置项配置不会受影响。',
+      buttons: [
+        {
+          text: '取消',
+          color: this.darkModeEnabled ? '#8892A4' : '#60708A'
+        },
+        {
+          text: '确认清空',
+          color: '#D85353'
+        }
+      ]
+    }).then((data: promptAction.ShowDialogSuccessResponse) => {
+      if (data.index === 1) {
+        // 用户确认清空
+        let state: PersistState = new PersistState();
+        // 保持当前配置
+        state.selectedDateKey = this.selectedDateKey;
+        state.displayYear = this.displayYear;
+        state.displayMonth = this.displayMonth;
+        state.targetAverageHours = this.targetAverageHours;
+        state.workdayStartTime = this.workdayStartTime;
+        state.excludedRanges = PunchCalculator.copyRanges(this.excludedRanges);
+        state.darkModeEnabled = this.darkModeEnabled;
+        state.records = [];
+
+        // 通过 StorageService 清空
+        let storageService: StorageService = new StorageService();
+        storageService.init(context.getHostContext() as common.UIAbilityContext);
+        storageService.clearAllRecords(state);
+
+        this.records = [];
+        this.summaryRefreshKey++;
+        this.monthContentKey++;
+        this.weekContentKey++;
+        context.getPromptAction().showToast({ message: '打卡数据已清空' });
+      }
+    }).catch(() => {});
   }
 }

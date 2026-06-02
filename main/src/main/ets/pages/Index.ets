@@ -1182,9 +1182,6 @@ struct Index {
     }
 
     // 如果从持久化加载后 records 为空（首次使用），则用 mock 数据填充
-    if (this.records.length === 0) {
-      this.records = PunchCalculator.createMockRecords(this.selectedDateKey);
-    }
     this.weekContentKey++;
     this.summaryRefreshKey++;
     this.persistState();

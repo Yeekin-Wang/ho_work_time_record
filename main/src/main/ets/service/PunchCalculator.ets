@@ -98,39 +98,6 @@ export class PunchCalculator {
   }
 
   /**
-   * 创建模拟打卡数据
-   */
-  static createMockRecords(todayKey: string): DailyPunchRecord[] {
-    let result: DailyPunchRecord[] = [];
-    let today: Date | null = TimeUtils.parseDateKey(todayKey);
-    if (today === null) {
-      return result;
-    }
-
-    let currentYear: number = today.getFullYear();
-    let currentMonth: number = today.getMonth();
-    let lastDayNumber: number = new Date(currentYear, currentMonth + 1, 0).getDate();
-    let day: number = 1;
-    while (day <= lastDayNumber) {
-      let date: Date = new Date(currentYear, currentMonth, day);
-      let weekDay: number = date.getDay();
-
-      if (weekDay >= 1 && weekDay <= 5) {
-        let dateKey: string = TimeUtils.createDateKey(date);
-        let startMinute: number = 540 + Math.floor(day * 0.5);
-        let endMinute: number = 1080 + Math.floor(day * 0.3);
-        if (day % 3 === 0) {
-          result.push(new DailyPunchRecord(dateKey, [startMinute]));
-        } else {
-          result.push(new DailyPunchRecord(dateKey, [startMinute, endMinute]));
-        }
-      }
-      day += 1;
-    }
-    return result;
-  }
-
-  /**
    * 深拷贝打卡记录的打点数组
    */
   static copyPunches(source: number[]): number[] {

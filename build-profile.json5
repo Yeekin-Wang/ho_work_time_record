@@ -5,13 +5,13 @@
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "certpath": "C:\\Users\\masqu\\.ohos\\config\\default_WorkingTimeRecord_pWylkWQH4JWe1AKmQjwJHCiEhzwuPZHAGO8f5bvyZRo=.cer",
-          "keyAlias": "debugKey",
-          "keyPassword": "0000001B2C14689F04F8359336B67B8317861BDC2160A8E803067BE356E05FD542CCBCA0BA63E973CBA864",
-          "profile": "C:\\Users\\masqu\\.ohos\\config\\default_WorkingTimeRecord_pWylkWQH4JWe1AKmQjwJHCiEhzwuPZHAGO8f5bvyZRo=.p7b",
+          "storeFile": "D:/document/harmony os密钥/yeekin.p12",
+          "storePassword": "0000001AA3C634E12926FEE9F39FCCB872FA8022744984217C3F2266EA01998DDE2F58BD9CE3EA9E312C",
+          "keyAlias": "yeekin_key",
+          "keyPassword": "0000001AF668D7014D927A9BD0B4C9B5C67C21DDB9488A1B346099EF349B9990DC0D7F68FF729AD8A517",
           "signAlg": "SHA256withECDSA",
-          "storeFile": "C:\\Users\\masqu\\.ohos\\config\\default_WorkingTimeRecord_pWylkWQH4JWe1AKmQjwJHCiEhzwuPZHAGO8f5bvyZRo=.p12",
-          "storePassword": "0000001B3DFE19986FBD4643F1855F49C8A4427B4CD5D006077113E116531A55ABE633B52DE449462A556E"
+          "profile": "D:/document/harmony os密钥/workhour tracker/workhour_trackerRelease.p7b",
+          "certpath": "D:/document/harmony os密钥/yeekin_release.cer"
         }
       }
     ],

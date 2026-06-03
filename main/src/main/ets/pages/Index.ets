@@ -4,7 +4,7 @@ import { common } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { util } from '@kit.ArkTS';
 import { zlib } from '@kit.BasicServicesKit';
-import { promptAction } from '@kit.ArkUI';
+import { promptAction, LengthMetrics } from '@kit.ArkUI';
 import { ExcludedRange } from '../model/ExcludedRange';
 import { DailyPunchRecord } from '../model/DailyPunchRecord';
 import { CalendarSlot } from '../model/CalendarSlot';
@@ -254,24 +254,35 @@ struct Index {
       colors: this.darkModeEnabled ? [['#1A1F2E', 0.0], ['#242B3D', 1.0]] : [['#F9FBFF', 0.0], ['#F2F5FB', 1.0]]
     })
     .animation({ duration: 220, curve: Curve.EaseInOut })
-    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM]);
+    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
+    .safeAreaPadding({
+      top: new LengthMetrics(0),
+      bottom: new LengthMetrics(0)
+    });
   }
 
   @Builder
   buildMainPage() {
-    Scroll() {
-      Column({ space: 16 }) {
-        this.buildMainHeader();
-        this.buildCalendarCard();
-        this.buildPunchCard();
-        this.buildSummaryCards();
+    Column() {
+      this.buildMainHeader();
+
+      Scroll() {
+        Column({ space: 16 }) {
+          this.buildCalendarCard();
+          this.buildPunchCard();
+          this.buildSummaryCards();
+        }
+        .padding({ left: 16, right: 16, top: 16, bottom: 28 })
+        .width('100%');
       }
-      .padding({ left: 16, right: 16, top: 20, bottom: 28 })
-      .width('100%');
+      .layoutWeight(1)
+      .scrollBar(BarState.Off)
+      .width('100%')
+      .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM]);
     }
-    .scrollBar(BarState.Off)
     .width('100%')
-    .height('100%');
+    .height('100%')
+    .padding({ left: 16, right: 16, top: 48 });
   }
 
   @Builder
@@ -328,17 +339,18 @@ struct Index {
           this.buildDarkModeCard();
           this.buildDataManagementCard();
         }
-        .padding({ left: 16, right: 16, bottom: 28 })
+        .padding({ left: 16, right: 16, top: 20, bottom: 28 })
         .width('100%')
         .alignItems(HorizontalAlign.Start);
       }
       .scrollBar(BarState.Off)
       .layoutWeight(1)
-      .width('100%');
+      .width('100%')
+      .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM]);
     }
     .width('100%')
     .height('100%')
-    .padding({ left: 16, right: 16, top: 20 })
+    .padding({ left: 16, right: 16, top: 48 })
     .justifyContent(FlexAlign.Start)
     .alignItems(HorizontalAlign.Start)
     .backgroundColor(this.darkModeEnabled ? '#1A1F2E' : '#F9FBFF')

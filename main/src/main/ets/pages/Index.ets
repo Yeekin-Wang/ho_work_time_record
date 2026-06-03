@@ -12,6 +12,13 @@ import { SummaryItem } from '../model/SummaryItem';
 import { TimeUtils } from '../service/TimeUtils';
 import { StorageService, PersistState } from '../service/StorageService';
 import { PunchCalculator } from '../service/PunchCalculator';
+import { DEFAULT_RANGE_END, DEFAULT_RANGE_START, DEFAULT_TARGET_HOURS, DEFAULT_WORKDAY_START, HOLIDAYS_2026, WEEKDAY_NAMES } from '../constants/IndexConstants';
+import { SettingsHeader } from '../components/index/SettingsHeader';
+import { WorkdayStartCard } from '../components/index/WorkdayStartCard';
+import { ExcludedRangesCard } from '../components/index/ExcludedRangesCard';
+import { TargetHoursCard } from '../components/index/TargetHoursCard';
+import { DarkModeCard } from '../components/index/DarkModeCard';
+import { DataManagementCard } from '../components/index/DataManagementCard';
 import { CustomTimePickerDialog } from './CustomTimePickerDialog';
 
 @Entry
@@ -22,14 +29,14 @@ struct Index {
   @State showSettingsPage: boolean = false;
   @State displayYear: number = 0;
   @State displayMonth: number = 0;
-  @State targetAverageHours: number = 8;
-  @State workdayStartTime: string = '09:00';
+  @State targetAverageHours: number = DEFAULT_TARGET_HOURS;
+  @State workdayStartTime: string = DEFAULT_WORKDAY_START;
   @State excludedRanges: ExcludedRange[] = [];
   @State records: DailyPunchRecord[] = [];
   @State showRangeDialog: boolean = false;
   @State showRangeConflictDialog: boolean = false;
-  @State rangeStartInput: string = '12:00';
-  @State rangeEndInput: string = '13:00';
+  @State rangeStartInput: string = DEFAULT_RANGE_START;
+  @State rangeEndInput: string = DEFAULT_RANGE_END;
   @State calendarTouchStartX: number = 0;
   @State settingsTouchStartX: number = 0;
   @State punchCardScale: number = 1;
@@ -53,16 +60,6 @@ struct Index {
   // 自定义时间选择弹窗控制器（用于上班时间设置）
   private workdayStartPickerController: CustomDialogController | null = null;
 
-  // 2026年法定节假日
-  private holidays2026: string[] = [
-    '2026-01-01', '2026-01-28', '2026-01-29', '2026-01-30', '2026-01-31', '2026-02-01', '2026-02-02',
-    '2026-04-03', '2026-04-04', '2026-04-05', '2026-04-06',
-    '2026-05-01', '2026-05-02', '2026-05-03',
-    '2026-06-22', '2026-06-23', '2026-06-24', '2026-06-25',
-    '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06', '2026-10-07',
-    '2026-10-08', '2026-10-09', '2026-10-10'
-  ];
-
   private pref: preferences.Preferences | null = null;
   private readonly prefName: string = 'working_time_record';
   private readonly prefSelectedDateKey: string = 'selected_date_key';
@@ -71,7 +68,6 @@ struct Index {
   private readonly prefWorkdayStartTime: string = 'workday_start_time';
   private readonly prefExcludedRanges: string = 'excluded_ranges';
   private readonly prefRecords: string = 'records';
-  private weekdayNames: string[] = ['一', '二', '三', '四', '五', '六', '日'];
 
   aboutToAppear(): void {
     this.initializeData();
@@ -329,15 +325,84 @@ struct Index {
   @Builder
   buildSettingsPage() {
     Column({ space: 16 }) {
-      this.buildSettingsHeader();
+      SettingsHeader({
+        darkModeEnabled: this.darkModeEnabled,
+        onBack: (): void => {
+          this.showSettingsPage = false;
+          this.summaryRefreshKey++;
+          this.confirmDeleteIndex = -1;
+        }
+      });
 
       Scroll() {
         Column({ space: 16 }) {
-          this.buildSettingsWorkdayStartCard();
-          this.buildExcludedRangesCard();
-          this.buildTargetHoursCard();
-          this.buildDarkModeCard();
-          this.buildDataManagementCard();
+          WorkdayStartCard({
+            darkModeEnabled: this.darkModeEnabled,
+            workdayStartTime: this.workdayStartTime,
+            onOpenPicker: (): void => {
+              this.openWorkdayStartTimePicker();
+            }
+          });
+          ExcludedRangesCard({
+            darkModeEnabled: this.darkModeEnabled,
+            excludedRanges: this.excludedRanges,
+            confirmDeleteIndex: this.confirmDeleteIndex,
+            onAdd: (): void => {
+              this.rangeStartInput = DEFAULT_RANGE_START;
+              this.rangeEndInput = DEFAULT_RANGE_END;
+              this.editRangeIndex = -1;
+              this.rangeDialogKey++;
+              this.showRangeDialog = true;
+              this.confirmDeleteIndex = -1;
+            },
+            onConfirmDelete: (index: number): void => {
+              this.removeRange(index);
+              this.confirmDeleteIndex = -1;
+            },
+            onRequestDelete: (index: number): void => {
+              this.confirmDeleteIndex = index;
+            },
+            onEdit: (index: number, range: ExcludedRange): void => {
+              this.rangeStartInput = range.start;
+              this.rangeEndInput = range.end;
+              this.editRangeIndex = index;
+              this.rangeDialogKey++;
+              this.showRangeDialog = true;
+            },
+            onResetDeleteConfirm: (): void => {
+              this.getUIContext().animateTo({ duration: 200, curve: Curve.EaseInOut }, () => {
+                this.confirmDeleteIndex = -1;
+              });
+            }
+          });
+          TargetHoursCard({
+            darkModeEnabled: this.darkModeEnabled,
+            targetAverageHours: this.targetAverageHours,
+            onChange: (value: number): void => {
+              this.targetAverageHours = Math.round(value * 10) / 10;
+              this.summaryRefreshKey++;
+              this.persistState();
+            }
+          });
+          DarkModeCard({
+            darkModeEnabled: this.darkModeEnabled,
+            onToggle: (isOn: boolean): void => {
+              this.darkModeEnabled = isOn;
+              this.persistState();
+            }
+          });
+          DataManagementCard({
+            darkModeEnabled: this.darkModeEnabled,
+            onExport: (): void => {
+              this.exportRecordsToCsv();
+            },
+            onImport: (): void => {
+              this.importRecordsFromCsv();
+            },
+            onClear: (): void => {
+              this.confirmClearAllRecords();
+            }
+          });
         }
         .padding({ left: 16, right: 16, top: 20, bottom: 28 })
         .width('100%')
@@ -381,195 +446,45 @@ struct Index {
 
   @Builder
   buildSettingsHeader() {
-    Column({ space: 16 }) {
-      Stack({ alignContent: Alignment.Center }) {
-        Text('设置')
-          .fontSize(28)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-
-        Row() {
-          Button('‹')
-            .height(42)
-            .width(42)
-            .fontSize(22)
-            .fontWeight(FontWeight.Normal)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
-            .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-            .borderRadius(21)
-            .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-            .onClick(() => {
-              this.showSettingsPage = false;
-              this.summaryRefreshKey++;
-              this.confirmDeleteIndex = -1;
-            });
-        }
-        .width('100%')
-        .justifyContent(FlexAlign.Start);
+    SettingsHeader({
+      darkModeEnabled: this.darkModeEnabled,
+      onBack: (): void => {
+        this.showSettingsPage = false;
+        this.summaryRefreshKey++;
+        this.confirmDeleteIndex = -1;
       }
-      .width('100%')
-      .height(42);
-
-      Row() {
-        Blank();
-        Text('')
-          .fontSize(13)
-          .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-        Blank();
-      }
-      .width('100%');
-    }
-    .width('100%');
+    });
   }
 
   @Builder
   buildExcludedRangesCard() {
-    Column({ space: 14 }) {
-      Row() {
-        Column({ space: 4 }) {
-          Text('不计入工时的时间段')
-            .fontSize(12)
-            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-          Text('排除时段')
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-        }
-
-        Button() {
-          Stack({ alignContent: Alignment.Center }) {
-            Text('+')
-              .fontSize(18)
-              .fontWeight(FontWeight.Regular)
-              .fontColor(this.darkModeEnabled ? '#8B9EF5' : '#2E67F8');
-          }
-          .width('100%')
-          .height('100%');
-        }
-        .width(44)
-        .height(44)
-        .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-        .borderRadius(22)
-        .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-        .onClick(() => {
-          this.rangeStartInput = '12:00';
-          this.rangeEndInput = '13:00';
-          this.editRangeIndex = -1;
-          this.rangeDialogKey++;
-          this.showRangeDialog = true;
-          this.confirmDeleteIndex = -1;
-        });
-      }
-      .width('100%')
-      .justifyContent(FlexAlign.SpaceBetween)
-      .alignItems(VerticalAlign.Center);
-
-      if (this.excludedRanges.length === 0) {
-        Column({ space: 8 }) {
-          Text('暂未配置排除时段')
-            .fontSize(16)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-          Text('例如午休 12:00 - 13:00，不参与工时计算。')
-            .fontSize(13)
-            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-        }
-        .width('100%')
-        .padding(16)
-        .borderRadius(18)
-        .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
-        .transition(TransitionEffect.OPACITY);
-      } else {
-        Column({ space: 10 }) {
-          ForEach(this.excludedRanges, (range: ExcludedRange, index: number) => {
-            Row() {
-              Column({ space: 2 }) {
-                Text('排除时段 ' + (index + 1).toString())
-                  .fontSize(13)
-                  .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-                Text(range.start + ' - ' + range.end)
-                  .fontSize(17)
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-              }
-
-              if (this.confirmDeleteIndex === index) {
-                // 确认删除状态：红底白字按钮
-                Button('确认删除')
-                  .height(34)
-                  .fontSize(13)
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor('#FFFFFF')
-                  .backgroundColor('#D85353')
-                  .borderRadius(17)
-                  .padding({ left: 14, right: 14 })
-                  .transition(TransitionEffect.scale({ x: 0.5, y: 0.5 }).combine(TransitionEffect.OPACITY))
-                  .onClick(() => {
-                    this.removeRange(index);
-                    this.confirmDeleteIndex = -1;
-                  });
-              } else {
-                // 默认状态：圆形×号
-                Button() {
-                  Text('✕')
-                    .fontSize(14)
-                    .fontColor('#D85353');
-                }
-                .width(28)
-                .height(28)
-                .backgroundColor(this.darkModeEnabled ? '#3D2030' : '#FFF5F5')
-                .borderRadius(14)
-                .padding(0)
-                .transition(TransitionEffect.scale({ x: 0.5, y: 0.5 }).combine(TransitionEffect.OPACITY))
-                .onClick(() => {
-                  this.confirmDeleteIndex = index;
-                });
-              }
-            }
-            .width('100%')
-            .padding({ left: 14, right: 14, top: 14, bottom: 14 })
-            .borderRadius(18)
-            .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
-            .justifyContent(FlexAlign.SpaceBetween)
-            .alignItems(VerticalAlign.Center)
-            .transition(TransitionEffect.translate({ x: -20, y: 0 }).combine(TransitionEffect.OPACITY))
-            .onClick(() => {
-              // 点击某一行：如果处于确认删除状态则取消确认，否则进入编辑模式
-              if (this.confirmDeleteIndex >= 0) {
-                this.getUIContext().animateTo({ duration: 200, curve: Curve.EaseInOut }, () => {
-                  this.confirmDeleteIndex = -1;
-                });
-              } else {
-                // 进入编辑模式：将当前时段的起止时间填入弹窗输入
-                this.rangeStartInput = range.start;
-                this.rangeEndInput = range.end;
-                this.editRangeIndex = index;
-                this.rangeDialogKey++;
-                this.showRangeDialog = true;
-              }
-            });
-          }, (range: ExcludedRange) => range.start + '_' + range.end);
-        }
-        .width('100%')
-        .onClick(() => {
-          // 点击列表空白区域，取消确认状态
-          if (this.confirmDeleteIndex >= 0) {
-            this.getUIContext().animateTo({ duration: 200, curve: Curve.EaseInOut }, () => {
-              this.confirmDeleteIndex = -1;
-            });
-          }
-        });
-      }
-    }
-    .width('100%')
-    .padding(16)
-    .borderRadius(24)
-    .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-    .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-    .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
-    .animation({ duration: 220, curve: Curve.EaseInOut })
-    .onClick(() => {
-      // 点击卡片边缘空白区域，取消确认状态
-      if (this.confirmDeleteIndex >= 0) {
+    ExcludedRangesCard({
+      darkModeEnabled: this.darkModeEnabled,
+      excludedRanges: this.excludedRanges,
+      confirmDeleteIndex: this.confirmDeleteIndex,
+      onAdd: (): void => {
+        this.rangeStartInput = DEFAULT_RANGE_START;
+        this.rangeEndInput = DEFAULT_RANGE_END;
+        this.editRangeIndex = -1;
+        this.rangeDialogKey++;
+        this.showRangeDialog = true;
+        this.confirmDeleteIndex = -1;
+      },
+      onConfirmDelete: (index: number): void => {
+        this.removeRange(index);
+        this.confirmDeleteIndex = -1;
+      },
+      onRequestDelete: (index: number): void => {
+        this.confirmDeleteIndex = index;
+      },
+      onEdit: (index: number, range: ExcludedRange): void => {
+        this.rangeStartInput = range.start;
+        this.rangeEndInput = range.end;
+        this.editRangeIndex = index;
+        this.rangeDialogKey++;
+        this.showRangeDialog = true;
+      },
+      onResetDeleteConfirm: (): void => {
         this.getUIContext().animateTo({ duration: 200, curve: Curve.EaseInOut }, () => {
           this.confirmDeleteIndex = -1;
         });
@@ -579,220 +494,53 @@ struct Index {
 
   @Builder
   buildTargetHoursCard() {
-    Column({ space: 14 }) {
-      Text('目标平均工时')
-        .fontSize(12)
-        .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-
-      Text(TimeUtils.formatHoursValue(this.targetAverageHours) + ' / 天')
-        .fontSize(24)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-
-      Slider({
-        value: this.targetAverageHours,
-        min: 6,
-        max: 12,
-        step: 0.1,
-        style: SliderStyle.OutSet
-      })
-        .width('100%')
-        .blockColor(this.darkModeEnabled ? '#8B9EF5' : '#2E67F8')
-        .trackColor(this.darkModeEnabled ? '#3A4255' : '#D8E0F0')
-        .selectedColor(this.darkModeEnabled ? '#8B9EF5' : '#2E67F8')
-        .onChange((value: number) => {
-          this.targetAverageHours = Math.round(value * 10) / 10;
-          this.summaryRefreshKey++;
-          this.persistState();
-        });
-
-      Text('调整后会立即持久保存，下次打开应用仍然保留。')
-        .fontSize(13)
-        .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-    }
-    .width('100%')
-    .padding(16)
-    .borderRadius(24)
-    .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-    .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-    .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
-    .animation({ duration: 220, curve: Curve.EaseInOut });
+    TargetHoursCard({
+      darkModeEnabled: this.darkModeEnabled,
+      targetAverageHours: this.targetAverageHours,
+      onChange: (value: number): void => {
+        this.targetAverageHours = Math.round(value * 10) / 10;
+        this.summaryRefreshKey++;
+        this.persistState();
+      }
+    });
   }
 
   @Builder
   buildSettingsWorkdayStartCard() {
-    Column({ space: 14 }) {
-      Text('工时开始时间')
-        .fontSize(12)
-        .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-
-      Row() {
-        Column({ space: 4 }) {
-          Text('开始计入工时')
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-          Text('若上班打卡早于该时间，将按该时间开始计算。')
-            .fontSize(13)
-            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-        }
-        .layoutWeight(1)
-        .alignItems(HorizontalAlign.Start);
-
-        Button(this.workdayStartTime)
-          .height(40)
-          .fontSize(16)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(this.darkModeEnabled ? '#8B9EF5' : '#2E67F8')
-          .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#EEF3FF')
-          .borderRadius(20)
-          .padding({ left: 14, right: 14 })
-          .onClick(() => {
-            this.openWorkdayStartTimePicker();
-          });
+    WorkdayStartCard({
+      darkModeEnabled: this.darkModeEnabled,
+      workdayStartTime: this.workdayStartTime,
+      onOpenPicker: (): void => {
+        this.openWorkdayStartTimePicker();
       }
-      .width('100%')
-      .justifyContent(FlexAlign.SpaceBetween)
-      .alignItems(VerticalAlign.Center);
-    }
-    .width('100%')
-    .padding(16)
-    .borderRadius(24)
-    .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-    .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-    .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
-    .animation({ duration: 220, curve: Curve.EaseInOut });
+    });
   }
 
   @Builder
   buildDarkModeCard() {
-    Column({ space: 14 }) {
-      Text('显示')
-        .fontSize(12)
-        .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-
-      Row() {
-        Column({ space: 4 }) {
-          Text('深色模式')
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-          Text('开启后应用深色主题')
-            .fontSize(13)
-            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-        }
-        .layoutWeight(1)
-        .alignItems(HorizontalAlign.Start);
-
-        Toggle({ type: ToggleType.Switch, isOn: this.darkModeEnabled })
-          .selectedColor('#2E67F8')
-          .onChange((isOn: boolean) => {
-            this.darkModeEnabled = isOn;
-            this.persistState();
-          });
+    DarkModeCard({
+      darkModeEnabled: this.darkModeEnabled,
+      onToggle: (isOn: boolean): void => {
+        this.darkModeEnabled = isOn;
+        this.persistState();
       }
-      .width('100%')
-      .justifyContent(FlexAlign.SpaceBetween)
-      .alignItems(VerticalAlign.Center);
-    }
-    .width('100%')
-    .padding(16)
-    .borderRadius(24)
-    .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-    .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-    .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
-    .animation({ duration: 220, curve: Curve.EaseInOut });
+    });
   }
 
   @Builder
   buildDataManagementCard() {
-    Column({ space: 14 }) {
-      Text('数据管理')
-        .fontSize(12)
-        .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-
-      // 导出导入数据
-      Row() {
-        Column({ space: 4 }) {
-          Text('导出/导入数据')
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-          Text('导出打卡数据为CSV文件，或从CSV文件导入')
-            .fontSize(13)
-            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-        }
-        .layoutWeight(1)
-        .alignItems(HorizontalAlign.Start);
+    DataManagementCard({
+      darkModeEnabled: this.darkModeEnabled,
+      onExport: (): void => {
+        this.exportRecordsToCsv();
+      },
+      onImport: (): void => {
+        this.importRecordsFromCsv();
+      },
+      onClear: (): void => {
+        this.confirmClearAllRecords();
       }
-      .width('100%')
-      .justifyContent(FlexAlign.SpaceBetween)
-      .alignItems(VerticalAlign.Center);
-
-      Row({ space: 12 }) {
-        Button('导出数据')
-          .layoutWeight(1)
-          .height(40)
-          .fontSize(14)
-          .fontWeight(FontWeight.Medium)
-          .fontColor('#FFFFFF')
-          .backgroundColor('#2E67F8')
-          .borderRadius(20)
-          .onClick(() => {
-            this.exportRecordsToCsv();
-          });
-
-        Button('导入数据')
-          .layoutWeight(1)
-          .height(40)
-          .fontSize(14)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
-          .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
-          .borderRadius(20)
-          .onClick(() => {
-            this.importRecordsFromCsv();
-          });
-      }
-      .width('100%');
-
-      // 清空打卡数据
-      Row() {
-        Column({ space: 4 }) {
-          Text('清空打卡数据')
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-          Text('清除所有打卡记录，设置项配置不受影响')
-            .fontSize(13)
-            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-        }
-        .layoutWeight(1)
-        .alignItems(HorizontalAlign.Start);
-
-        Button('清空')
-          .height(36)
-          .fontSize(14)
-          .fontWeight(FontWeight.Medium)
-          .fontColor('#FFFFFF')
-          .backgroundColor('#D85353')
-          .borderRadius(18)
-          .padding({ left: 16, right: 16 })
-          .onClick(() => {
-            this.confirmClearAllRecords();
-          });
-      }
-      .width('100%')
-      .justifyContent(FlexAlign.SpaceBetween)
-      .alignItems(VerticalAlign.Center);
-    }
-    .width('100%')
-    .padding(16)
-    .borderRadius(24)
-    .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-    .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-    .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
-    .animation({ duration: 220, curve: Curve.EaseInOut });
+    });
   }
 
   @Builder
@@ -835,7 +583,7 @@ struct Index {
         });
 
         Row() {
-          ForEach(this.weekdayNames, (item: string) => {
+          ForEach(WEEKDAY_NAMES, (item: string) => {
             Text(item)
               .layoutWeight(1)
               .textAlign(TextAlign.Center)
@@ -912,7 +660,7 @@ struct Index {
       });
 
       Row() {
-        ForEach(this.weekdayNames, (item: string) => {
+        ForEach(WEEKDAY_NAMES, (item: string) => {
           Text(item)
             .layoutWeight(1)
             .textAlign(TextAlign.Center)
@@ -1163,8 +911,7 @@ struct Index {
           .fontSize(22)
           .fontWeight(FontWeight.Bold)
           .fontColor(this.getDifferenceColor())
-          .animation({ duration: 200, curve: Curve.EaseInOut })
-          .key('diff_' + this.summaryRefreshKey.toString());
+          .animation({ duration: 200, curve: Curve.EaseInOut });
       }
       .width('100%')
       .padding(16)
@@ -1387,7 +1134,7 @@ struct Index {
     if (this.selectedDateKey === todayKey) {
       return '今天';
     }
-    return TimeUtils.getDateLabelWithWeekday(this.selectedDateKey, this.weekdayNames);
+    return TimeUtils.getDateLabelWithWeekday(this.selectedDateKey, WEEKDAY_NAMES);
   }
 
   jumpToToday(): void {
@@ -1592,7 +1339,7 @@ struct Index {
   }
 
   getSelectedDateLabel(): string {
-    return TimeUtils.getDateLabelWithWeekday(this.selectedDateKey, this.weekdayNames);
+    return TimeUtils.getDateLabelWithWeekday(this.selectedDateKey, WEEKDAY_NAMES);
   }
 
   getSelectedWorkMinutes(): number {
@@ -1958,7 +1705,7 @@ struct Index {
   }
 
   isHoliday(): boolean {
-    return this.holidays2026.includes(this.selectedDateKey);
+    return HOLIDAYS_2026.includes(this.selectedDateKey);
   }
 
   getRecordPunchCount(dateKey: string): number {

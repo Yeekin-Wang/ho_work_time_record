@@ -289,7 +289,7 @@ struct Index {
   buildMainHeader() {
     Column({ space: 16 }) {
       Stack({ alignContent: Alignment.Center }) {
-        Text('工时打卡')
+        Text('打卡')
           .fontSize(28)
           .fontWeight(FontWeight.Bold)
           .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');

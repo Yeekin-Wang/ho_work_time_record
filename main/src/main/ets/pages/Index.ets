@@ -19,6 +19,8 @@ import { ExcludedRangesCard } from '../components/index/ExcludedRangesCard';
 import { TargetHoursCard } from '../components/index/TargetHoursCard';
 import { DarkModeCard } from '../components/index/DarkModeCard';
 import { DataManagementCard } from '../components/index/DataManagementCard';
+import { RangeEditDialog } from '../components/dialogs/RangeEditDialog';
+import { RangeConflictDialog } from '../components/dialogs/RangeConflictDialog';
 import { CustomTimePickerDialog } from './CustomTimePickerDialog';
 
 @Entry
@@ -85,163 +87,7 @@ struct Index {
         this.buildExpandedCalendarOverlay();
       }
 
-      if (this.showRangeDialog) {
-        Stack({ alignContent: Alignment.Center }) {
-          Column()
-            .width('100%')
-            .height('100%')
-            .backgroundColor(this.darkModeEnabled ? '#80000000' : '#660C1729')
-            .animation({ duration: 220, curve: Curve.EaseInOut })
-            .gesture(
-              PanGesture({ direction: PanDirection.Horizontal })
-                .onActionEnd((_event: GestureEvent) => {
-                  this.showRangeDialog = false;
-                  this.editRangeIndex = -1;
-                })
-            )
-            .onClick(() => {
-              this.showRangeDialog = false;
-              this.editRangeIndex = -1;
-            });
-
-          Column({ space: 16 }) {
-            Text(this.editRangeIndex >= 0 ? '编辑排除时段' : '新增排除时段')
-              .fontSize(22)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-
-            Text('使用系统时间滑动选择器，输入体验更正式，避免手动输入格式错误。')
-              .fontSize(13)
-              .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-
-            Row({ space: 12 }) {
-              Button() {
-                Row() {
-                  Text(this.rangeStartInput)
-                    .fontSize(20)
-                    .fontWeight(FontWeight.Bold)
-                    .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-                  Blank();
-                  Text('开始')
-                    .fontSize(12)
-                    .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-                }
-                .width('100%');
-              }
-              .layoutWeight(1)
-              .height(72)
-              .padding({ left: 16, right: 16 })
-              .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
-              .borderRadius(18)
-              .onClick(() => {
-                this.openRangeTimePicker(true);
-              });
-
-              Button() {
-                Row() {
-                  Text(this.rangeEndInput)
-                    .fontSize(20)
-                    .fontWeight(FontWeight.Bold)
-                    .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-                  Blank();
-                  Text('结束')
-                    .fontSize(12)
-                    .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-                }
-                .width('100%');
-              }
-              .layoutWeight(1)
-              .height(72)
-              .padding({ left: 16, right: 16 })
-              .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
-              .borderRadius(18)
-              .onClick(() => {
-                this.openRangeTimePicker(false);
-              });
-            }
-            .width('100%');
-
-            Row({ space: 12 }) {
-              Button('取消')
-                .layoutWeight(1)
-                .height(48)
-                .fontSize(16)
-                .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
-                .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
-                .borderRadius(20)
-                .onClick(() => {
-                  this.showRangeDialog = false;
-                  this.editRangeIndex = -1;
-                });
-
-              Button(this.editRangeIndex >= 0 ? '保存' : '添加')
-                .layoutWeight(1)
-                .height(48)
-                .fontSize(16)
-                .fontWeight(FontWeight.Bold)
-                .fontColor('#FFFFFF')
-                .backgroundColor('#2E67F8')
-                .borderRadius(20)
-                .onClick(() => {
-                  this.confirmAddRange();
-                });
-            }
-            .width('100%');
-          }
-          .width('88%')
-          .padding(20)
-          .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-          .borderRadius(28);
-        }
-        .width('100%')
-        .height('100%');
-      }
-
-      if (this.showRangeConflictDialog) {
-        Stack({ alignContent: Alignment.Center }) {
-          Column()
-            .width('100%')
-            .height('100%')
-            .backgroundColor(this.darkModeEnabled ? '#80000000' : '#660C1729')
-            .animation({ duration: 220, curve: Curve.EaseInOut })
-            .onClick(() => {
-              this.showRangeConflictDialog = false;
-            });
-
-          Column({ space: 16 }) {
-            Text('时段冲突')
-              .fontSize(22)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-
-            Text('当前排除时段与已配置的排除时段存在冲突，请调整时间后再试。')
-              .fontSize(14)
-              .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A')
-              .lineHeight(22)
-              .textAlign(TextAlign.Center);
-
-            Button('知道了')
-              .width('100%')
-              .height(48)
-              .fontSize(16)
-              .fontWeight(FontWeight.Bold)
-              .fontColor('#FFFFFF')
-              .backgroundColor('#2E67F8')
-              .borderRadius(20)
-              .onClick(() => {
-                this.showRangeConflictDialog = false;
-              });
-          }
-          .width('80%')
-          .padding(24)
-          .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-          .borderRadius(28)
-          .shadow({ radius: 18, color: this.darkModeEnabled ? '#0000004D' : '#30223C5C', offsetX: 0, offsetY: 10 })
-          .transition(TransitionEffect.scale({ x: 0.85, y: 0.85 }).combine(TransitionEffect.OPACITY).animation({ duration: 250, curve: Curve.EaseInOut }));
-        }
-        .width('100%')
-        .height('100%');
-      }
+      this.buildDialogs();
     }
     .width('100%')
     .height('100%')
@@ -255,6 +101,43 @@ struct Index {
       top: new LengthMetrics(0),
       bottom: new LengthMetrics(0)
     });
+  }
+
+  @Builder
+  buildDialogs() {
+    if (this.showRangeDialog) {
+      RangeEditDialog({
+        darkModeEnabled: this.darkModeEnabled,
+        editRangeIndex: this.editRangeIndex,
+        rangeStartInput: this.rangeStartInput,
+        rangeEndInput: this.rangeEndInput,
+        onCancel: (): void => {
+          this.showRangeDialog = false;
+          this.editRangeIndex = -1;
+        },
+        onConfirm: (): void => {
+          this.confirmAddRange();
+        },
+        onPickStart: (): void => {
+          this.openRangeTimePicker(true);
+        },
+        onPickEnd: (): void => {
+          this.openRangeTimePicker(false);
+        }
+      });
+    }
+
+    if (this.showRangeConflictDialog) {
+      RangeConflictDialog({
+        darkModeEnabled: this.darkModeEnabled,
+        onClose: (): void => {
+          this.showRangeConflictDialog = false;
+        },
+        onConfirm: (): void => {
+          this.showRangeConflictDialog = false;
+        }
+      });
+    }
   }
 
   @Builder

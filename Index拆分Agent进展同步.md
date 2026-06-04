@@ -36,16 +36,16 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 
 | 项目 | 当前状态 |
 |---|---|
-| 当前阶段 | 阶段 1：常量与设置页拆分 |
-| 当前步骤 | 阶段 1 已完成常量抽离与设置页组件拆分，待进入下一阶段 |
-| 当前分支 | `refactor/index-stage1-settings` |
-| 最近一次执行时间 | 2026-06-03 13:08:00 |
+| 当前阶段 | 阶段 2：弹窗拆分 |
+| 当前步骤 | 阶段 2 已完成排除时段编辑弹窗与冲突提示弹窗拆分，待提交后进入阶段 3 |
+| 当前分支 | `refactor/index-stage2-dialogs` |
+| 最近一次执行时间 | 2026-06-04 15:20:00 |
 | 最近一次执行人/Agent | OpenAI Codex Agent |
-| 最近一次编译结果 | 成功（阶段 1 修改后执行构建验证通过） |
-| 最近一次回归结果 | 已完成设置页结构替换与编译级验证，未执行真机/手工页面交互回归 |
+| 最近一次编译结果 | 成功（阶段 2 修改后执行构建验证通过） |
+| 最近一次回归结果 | 已完成弹窗结构替换与编译级验证，未执行真机/手工页面交互回归 |
 | 是否存在阻塞 | 否 |
 | 阻塞摘要 | 无 |
-| 下一步计划 | 进入阶段 2，拆分排除时段编辑与冲突提示弹窗 |
+| 下一步计划 | 提交阶段 2 代码后，进入阶段 3 拆分主页展示区组件 |
 
 ---
 
@@ -55,7 +55,7 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 |---|---|---|---|---|---|---|
 | 1 | 阶段 0 | 准备阶段 | 必做 | `[x]` | 2026-06-03 12:40:48 | 已完成基线记录、目录创建、编译验证 |
 | 2 | 阶段 1 | 常量与设置页拆分 | 必做 | `[x]` | 2026-06-03 13:05:00 | 已完成常量文件与设置页组件抽离，构建通过 |
-| 3 | 阶段 2 | 弹窗拆分 | 必做 | `[ ]` |  |  |
+| 3 | 阶段 2 | 弹窗拆分 | 必做 | `[x]` | 2026-06-04 15:20:00 | 已完成排除时段编辑弹窗与冲突提示弹窗抽离，构建通过 |
 | 4 | 阶段 3 | 主页面展示区拆分 | 必做 | `[ ]` |  |  |
 | 5 | 阶段 4 | 日历区域拆分 | 必做 | `[ ]` |  |  |
 | 6 | 阶段 5 | 导入导出与持久化 service 化 | 必做 | `[ ]` |  |  |
@@ -205,56 +205,56 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 
 | 项目 | 内容 |
 |---|---|
-| 阶段状态 | `[ ]` |
+| 阶段状态 | `[x]` |
 | 目标分支 | `refactor/index-stage2-dialogs` |
-| 开始时间 |  |
-| 完成时间 |  |
-| 编译结果 | 未执行 |
-| 回归结果 | 未执行 |
-| 是否允许进入下一阶段 | 未确认 |
+| 开始时间 | 2026-06-04 15:05:00 |
+| 完成时间 | 2026-06-04 15:20:00 |
+| 编译结果 | 成功（`builtin_execute_build_command` 返回 Build success） |
+| 回归结果 | 已完成编译级验证；弹窗打开、选择、保存、遮罩关闭的手工回归待后续统一执行 |
+| 是否允许进入下一阶段 | 是 |
 
 ### 7.2 步骤进度
 
 | 步骤 | 内容 | 状态 | 执行记录 |
 |---|---|---|---|
-| Step 1 | 创建/切换阶段分支 | `[ ]` |  |
-| Step 2 | 新建 `RangeEditDialog.ets` | `[ ]` |  |
-| Step 3 | 提取排除时段编辑弹窗 UI | `[ ]` |  |
-| Step 4 | 设计并接入编辑弹窗入参 | `[ ]` |  |
-| Step 5 | 设计并接入编辑弹窗回调 | `[ ]` |  |
-| Step 6 | 确认输入状态仍由父组件持有 | `[ ]` |  |
-| Step 7 | 新建 `RangeConflictDialog.ets` | `[ ]` |  |
-| Step 8 | 提取冲突提示弹窗 UI | `[ ]` |  |
-| Step 9 | 接入冲突弹窗入参与回调 | `[ ]` |  |
-| Step 10 | 评估是否需要 `ConfirmClearDialog.ets` | `[ ]` |  |
-| Step 11 | 如有必要，新增并接入 `ConfirmClearDialog.ets` | `[~]` | 默认可延后 |
-| Step 12 | 整理 `Index.ets` 中弹窗分支 | `[ ]` |  |
-| Step 13 | 收敛到 `buildDialogs()` 或等价方法 | `[ ]` |  |
-| Step 14 | 执行弹窗功能回归 | `[ ]` |  |
-| Step 15 | 执行阶段编译验证 | `[ ]` |  |
-| Step 16 | 提交阶段代码 | `[ ]` |  |
+| Step 1 | 创建/切换阶段分支 | `[x]` | 已从 `refactor/index-stage1-settings` 新建并切换到 `refactor/index-stage2-dialogs`。 |
+| Step 2 | 新建 `RangeEditDialog.ets` | `[x]` | 已新增排除时段编辑弹窗组件。 |
+| Step 3 | 提取排除时段编辑弹窗 UI | `[x]` | 已将 `Index.ets` 中内联编辑弹窗 UI 迁移到组件。 |
+| Step 4 | 设计并接入编辑弹窗入参 | `[x]` | 已接入 `darkModeEnabled`、`editRangeIndex`、`rangeStartInput`、`rangeEndInput`。 |
+| Step 5 | 设计并接入编辑弹窗回调 | `[x]` | 已接入 `onCancel`、`onConfirm`、`onPickStart`、`onPickEnd`，父页面保留原逻辑。 |
+| Step 6 | 确认输入状态仍由父组件持有 | `[x]` | 输入状态仍由 `Index.ets` 的 `@State` 持有，弹窗只展示和触发回调。 |
+| Step 7 | 新建 `RangeConflictDialog.ets` | `[x]` | 已新增冲突提示弹窗组件。 |
+| Step 8 | 提取冲突提示弹窗 UI | `[x]` | 已将 `Index.ets` 中内联冲突提示 UI 迁移到组件。 |
+| Step 9 | 接入冲突弹窗入参与回调 | `[x]` | 已接入 `darkModeEnabled`、`onClose`、`onConfirm`。 |
+| Step 10 | 评估是否需要 `ConfirmClearDialog.ets` | `[~]` | 当前清空确认仍为系统弹窗/原逻辑，按手册默认延后，不在阶段 2 拆分。 |
+| Step 11 | 如有必要，新增并接入 `ConfirmClearDialog.ets` | `[~]` | 本阶段不新增。 |
+| Step 12 | 整理 `Index.ets` 中弹窗分支 | `[x]` | 已移除 `build()` 中弹窗内联 UI，改为调用 `buildDialogs()`。 |
+| Step 13 | 收敛到 `buildDialogs()` 或等价方法 | `[x]` | 已新增 `buildDialogs()` 统一编排弹窗组件。 |
+| Step 14 | 执行弹窗功能回归 | `[~]` | 已完成编译级验证，未执行真机/手工交互回归。 |
+| Step 15 | 执行阶段编译验证 | `[x]` | 构建成功。 |
+| Step 16 | 提交阶段代码 | `[~]` | 按当前协作方式暂未执行 git commit。 |
 
 ### 7.3 文件变更记录
 
 | 类型 | 文件 | 说明 |
 |---|---|---|
-| 新增 | `main/src/main/ets/components/dialogs/RangeEditDialog.ets` |  |
-| 新增 | `main/src/main/ets/components/dialogs/RangeConflictDialog.ets` |  |
-| 新增 | `main/src/main/ets/components/dialogs/ConfirmClearDialog.ets` | 可选 |
-| 修改 | `main/src/main/ets/pages/Index.ets` |  |
+| 新增 | `main/src/main/ets/components/dialogs/RangeEditDialog.ets` | 排除时段新增/编辑弹窗组件 |
+| 新增 | `main/src/main/ets/components/dialogs/RangeConflictDialog.ets` | 排除时段冲突提示弹窗组件 |
+| 新增 | `main/src/main/ets/components/dialogs/ConfirmClearDialog.ets` | 可选，本阶段未新增 |
+| 修改 | `main/src/main/ets/pages/Index.ets` | 接入弹窗组件，新增 `buildDialogs()`，保留校验和时间选择逻辑 |
 
 ### 7.4 回归记录
 
 | 验证项 | 状态 | 备注 |
 |---|---|---|
-| 排除时段弹窗可打开 | `[ ]` |  |
-| 开始时间选择可用 | `[ ]` |  |
-| 结束时间选择可用 | `[ ]` |  |
-| 保存行为正确 | `[ ]` |  |
-| 取消行为正确 | `[ ]` |  |
-| 冲突弹窗提示正常 | `[ ]` |  |
-| 遮罩关闭逻辑正常 | `[ ]` |  |
-| 工程编译通过 | `[ ]` |  |
+| 排除时段弹窗可打开 | `[~]` | 未做手工回归，组件接入后编译通过 |
+| 开始时间选择可用 | `[~]` | 未做手工回归，回调透传至原 `openRangeTimePicker(true)` |
+| 结束时间选择可用 | `[~]` | 未做手工回归，回调透传至原 `openRangeTimePicker(false)` |
+| 保存行为正确 | `[~]` | 未做手工回归，回调透传至原 `confirmAddRange()` |
+| 取消行为正确 | `[~]` | 未做手工回归，保留原关闭与重置编辑索引逻辑 |
+| 冲突弹窗提示正常 | `[~]` | 未做手工回归，展示组件已接入原显示状态 |
+| 遮罩关闭逻辑正常 | `[~]` | 未做手工回归，遮罩关闭回调已透传父页面状态更新 |
+| 工程编译通过 | `[x]` | Build success |
 
 ---
 
@@ -637,7 +637,22 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 
 ### 历史执行记录
 
-暂无。
+### 2026-06-04 15:20 执行记录
+
+- 执行阶段：阶段 2：弹窗拆分
+- 执行步骤：Step 1 - Step 15
+- 执行前状态：阶段 1 已完成，当前位于 `refactor/index-stage1-settings`，待进入阶段 2
+- 本次完成内容：新建 `refactor/index-stage2-dialogs` 分支；抽离排除时段编辑弹窗与冲突提示弹窗；在 `Index.ets` 中新增 `buildDialogs()` 统一编排；执行编辑器检查与构建验证
+- 新增文件：`main/src/main/ets/components/dialogs/RangeEditDialog.ets`、`main/src/main/ets/components/dialogs/RangeConflictDialog.ets`
+- 修改文件：`main/src/main/ets/pages/Index.ets`、`Index拆分Agent进展同步.md`
+- 删除文件：无
+- 编译结果：成功，`builtin_execute_build_command` 返回 Build success
+- 回归结果：已完成编译级验证，未执行真机/手工弹窗交互回归
+- 遇到问题：无阻塞；命令输出在当前终端环境中显示不完整，但分支状态与构建结果可确认
+- 处理方式：通过 `git rev-parse --abbrev-ref HEAD` 与后续状态确认当前分支为 `refactor/index-stage2-dialogs`
+- 是否存在阻塞：否
+- 下一步计划：提交阶段 2 代码后进入阶段 3，拆分主页展示区组件
+
 
 ---
 
@@ -645,6 +660,8 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 
 | 时间 | 阶段 | 检查方式 | 结果 | 错误摘要 | 处理状态 |
 |---|---|---|---|---|---|
+| 2026-06-04 15:18 | 阶段 2：弹窗拆分 | `builtin_check_editor_errors` | 通过 | 无 | 已完成 |
+| 2026-06-04 15:20 | 阶段 2：弹窗拆分 | `builtin_execute_build_command` | 通过 | Build success | 已完成 |
 |  |  |  |  |  |  |
 
 ---
@@ -687,6 +704,6 @@ Agent 每次执行后应遵循以下更新规则：
 当前默认从以下任务开始：
 
 ```text
-阶段 0：准备阶段
-Step 1：确认工作区状态：执行 git status
+阶段 3：主页面展示区拆分
+Step 1：创建/切换阶段分支 refactor/index-stage3-main-sections
 ```

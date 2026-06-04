@@ -36,16 +36,16 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 
 | 项目 | 当前状态 |
 |---|---|
-| 当前阶段 | 阶段 2：弹窗拆分 |
-| 当前步骤 | 阶段 2 已完成排除时段编辑弹窗与冲突提示弹窗拆分，待提交后进入阶段 3 |
-| 当前分支 | `refactor/index-stage2-dialogs` |
-| 最近一次执行时间 | 2026-06-04 15:20:00 |
+| 当前阶段 | 阶段 3：主页面展示区拆分 |
+| 当前步骤 | 阶段 3 已完成主页头部、汇总区、打卡区与今日按钮组件拆分，待提交后进入阶段 4 |
+| 当前分支 | `refactor/index-stage3-main-sections` |
+| 最近一次执行时间 | 2026-06-04 15:55:00 |
 | 最近一次执行人/Agent | OpenAI Codex Agent |
-| 最近一次编译结果 | 成功（阶段 2 修改后执行构建验证通过） |
-| 最近一次回归结果 | 已完成弹窗结构替换与编译级验证，未执行真机/手工页面交互回归 |
+| 最近一次编译结果 | 成功（阶段 3 修改后执行构建验证通过） |
+| 最近一次回归结果 | 已修复打卡时间不实时更新问题并完成编译级验证，未执行真机/手工页面交互回归 |
 | 是否存在阻塞 | 否 |
 | 阻塞摘要 | 无 |
-| 下一步计划 | 提交阶段 2 代码后，进入阶段 3 拆分主页展示区组件 |
+| 下一步计划 | 提交阶段 3 代码后，进入阶段 4 拆分日历区域组件与日历计算 service |
 
 ---
 
@@ -56,7 +56,7 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 | 1 | 阶段 0 | 准备阶段 | 必做 | `[x]` | 2026-06-03 12:40:48 | 已完成基线记录、目录创建、编译验证 |
 | 2 | 阶段 1 | 常量与设置页拆分 | 必做 | `[x]` | 2026-06-03 13:05:00 | 已完成常量文件与设置页组件抽离，构建通过 |
 | 3 | 阶段 2 | 弹窗拆分 | 必做 | `[x]` | 2026-06-04 15:20:00 | 已完成排除时段编辑弹窗与冲突提示弹窗抽离，构建通过 |
-| 4 | 阶段 3 | 主页面展示区拆分 | 必做 | `[ ]` |  |  |
+| 4 | 阶段 3 | 主页面展示区拆分 | 必做 | `[x]` | 2026-06-04 15:55:00 | 已完成主页展示区抽离，并修复打卡时间实时更新问题，构建通过 |
 | 5 | 阶段 4 | 日历区域拆分 | 必做 | `[ ]` |  |  |
 | 6 | 阶段 5 | 导入导出与持久化 service 化 | 必做 | `[ ]` |  |  |
 | 7 | 阶段 8 | 收尾优化 | 必做 | `[ ]` |  |  |
@@ -256,6 +256,14 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 | 遮罩关闭逻辑正常 | `[~]` | 未做手工回归，遮罩关闭回调已透传父页面状态更新 |
 | 工程编译通过 | `[x]` | Build success |
 
+### 8.5 阶段问题记录
+
+| 问题 | 影响 | 处理结果 |
+|---|---|---|
+| `TodayTipButton` 使用 `onClick` 作为组件属性名时与 ArkUI `CustomComponent` 基类属性冲突 | 阶段构建失败一次 | 将对外回调属性改名为 `onTap`，重新执行构建后通过 |
+| `PunchCardSection` 初版仅接收格式化后的 `startTimeText`、`endTimeText`、`selectedWorkMinutes`，打卡后子组件未稳定触发实时刷新 | 前端打卡时间不能实时更新 | 向组件补充传入 `selectedDateKey`、`records`、`workdayStartTime`、`excludedRanges`，组件内部基于最新记录重新计算展示时间和工时；构建验证通过 |
+| 本阶段不拆日历区域，但“今日”按钮位于折叠日历标题区 | 今日按钮与日历卡片存在轻度耦合 | 仅抽离按钮 UI，缩放动画与 `jumpToToday()` 保持在父页面，日历卡片整体留待阶段 4 |
+
 ---
 
 ## 8. 阶段 3：主页面展示区拆分进展
@@ -264,55 +272,56 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 
 | 项目 | 内容 |
 |---|---|
-| 阶段状态 | `[ ]` |
+| 阶段状态 | `[x]` |
 | 目标分支 | `refactor/index-stage3-main-sections` |
-| 开始时间 |  |
-| 完成时间 |  |
-| 编译结果 | 未执行 |
-| 回归结果 | 未执行 |
-| 是否允许进入下一阶段 | 未确认 |
+| 开始时间 | 2026-06-04 15:24:00 |
+| 完成时间 | 2026-06-04 15:45:00 |
+| 编译结果 | 成功（`builtin_execute_build_command` 返回 Build success） |
+| 回归结果 | 已完成编译级验证；主页显示、设置入口、打卡、编辑、删除、汇总与今日按钮手工回归待后续统一执行 |
+| 是否允许进入下一阶段 | 是 |
 
 ### 8.2 步骤进度
 
 | 步骤 | 内容 | 状态 | 执行记录 |
 |---|---|---|---|
-| Step 1 | 创建/切换阶段分支 | `[ ]` |  |
-| Step 2 | 新建 `MainHeader.ets` | `[ ]` |  |
-| Step 3 | 提取并接入主页标题组件 | `[ ]` |  |
-| Step 4 | 新建 `SummaryCardsSection.ets` | `[ ]` |  |
-| Step 5 | 提取并接入汇总区容器 | `[ ]` |  |
-| Step 6 | 确认 `ForEach` key 未被破坏 | `[ ]` |  |
-| Step 7 | 新建 `PunchCardSection.ets` | `[ ]` |  |
-| Step 8 | 提取并接入打卡区组件 | `[ ]` |  |
-| Step 9 | 确认打卡动画状态仍稳定 | `[ ]` |  |
-| Step 10 | 新建 `TodayTipButton.ets` | `[ ]` |  |
-| Step 11 | 提取并接入回到今天按钮 | `[ ]` |  |
-| Step 12 | 重组首页布局为组件组合结构 | `[ ]` |  |
-| Step 13 | 执行主页功能回归 | `[ ]` |  |
-| Step 14 | 执行阶段编译验证 | `[ ]` |  |
-| Step 15 | 提交阶段代码 | `[ ]` |  |
+| Step 1 | 创建/切换阶段分支 | `[x]` | 已从 `refactor/index-stage2-dialogs` 新建并切换到 `refactor/index-stage3-main-sections`。 |
+| Step 2 | 新建 `MainHeader.ets` | `[x]` | 已新增主页头部组件。 |
+| Step 3 | 提取并接入主页标题组件 | `[x]` | 已将 `buildMainHeader()` 内联 UI 替换为 `MainHeader`，设置入口通过 `onOpenSettings` 回调透传。 |
+| Step 4 | 新建 `SummaryCardsSection.ets` | `[x]` | 已新增汇总卡片区组件。 |
+| Step 5 | 提取并接入汇总区容器 | `[x]` | 已将 `buildSummaryCards()` 内联 UI 替换为 `SummaryCardsSection`，汇总数据仍由父页面计算并传入。 |
+| Step 6 | 确认 `ForEach` key 未被破坏 | `[x]` | `SummaryCardsSection` 保留 `item.title + '_' + summaryRefreshKey` 作为 key，刷新触发方式不变。 |
+| Step 7 | 新建 `PunchCardSection.ets` | `[x]` | 已新增打卡区组件。 |
+| Step 8 | 提取并接入打卡区组件 | `[x]` | 已将打卡卡片和时间卡片 UI 迁移至 `PunchCardSection`，打卡、编辑仍回调父页面原方法。 |
+| Step 9 | 确认打卡动画状态仍稳定 | `[x]` | `punchCardScale`、`punchButtonGlow` 仍由父页面持有并传入组件，动画状态来源不变。 |
+| Step 10 | 新建 `TodayTipButton.ets` | `[x]` | 已新增今日按钮组件；因组件属性名 `onClick` 与基类冲突，最终命名为 `onTap`。 |
+| Step 11 | 提取并接入回到今天按钮 | `[x]` | 折叠日历标题区改为调用 `TodayTipButton`，缩放动画与 `jumpToToday()` 仍由父页面处理。 |
+| Step 12 | 重组首页布局为组件组合结构 | `[x]` | 主页现由 `MainHeader`、阶段 4 待拆的日历卡片、`PunchCardSection`、`SummaryCardsSection` 组合。 |
+| Step 13 | 执行主页功能回归 | `[~]` | 已完成编译级验证，未执行真机/手工交互回归。 |
+| Step 14 | 执行阶段编译验证 | `[x]` | 构建成功。 |
+| Step 15 | 提交阶段代码 | `[~]` | 按当前协作方式暂未执行 git commit。 |
 
 ### 8.3 文件变更记录
 
 | 类型 | 文件 | 说明 |
 |---|---|---|
-| 新增 | `main/src/main/ets/components/index/MainHeader.ets` |  |
-| 新增 | `main/src/main/ets/components/index/SummaryCardsSection.ets` |  |
-| 新增 | `main/src/main/ets/components/index/PunchCardSection.ets` |  |
-| 新增 | `main/src/main/ets/components/index/TodayTipButton.ets` |  |
-| 修改 | `main/src/main/ets/pages/Index.ets` |  |
+| 新增 | `main/src/main/ets/components/index/MainHeader.ets` | 主页标题、选中日期描述与设置入口组件 |
+| 新增 | `main/src/main/ets/components/index/SummaryCardsSection.ets` | 目标/当前平均工时与差异文案汇总区组件 |
+| 新增 | `main/src/main/ets/components/index/PunchCardSection.ets` | 当前日期、工时、上下班打卡时间与立即打卡按钮组件 |
+| 新增 | `main/src/main/ets/components/index/TodayTipButton.ets` | 折叠日历标题区的“今日”按钮组件 |
+| 修改 | `main/src/main/ets/pages/Index.ets` | 接入主页展示区组件，保留业务逻辑、动画状态与日历区域实现 |
+| 修改 | `Index拆分Agent进展同步.md` | 同步阶段 3 的实际执行记录 |
 
 ### 8.4 回归记录
 
 | 验证项 | 状态 | 备注 |
 |---|---|---|
-| 主页正常显示 | `[ ]` |  |
-| 设置按钮正常 | `[ ]` |  |
-| 打卡功能正常 | `[ ]` |  |
-| 打卡编辑/删除正常 | `[ ]` |  |
-| 汇总卡片数据正确 | `[ ]` |  |
-| 回到今天按钮行为正确 | `[ ]` |  |
-| 工程编译通过 | `[ ]` |  |
+| 主页正常显示 | `[~]` | 未做手工回归，结构替换后编译通过 |
+| 设置按钮正常 | `[~]` | 未做手工回归，`onOpenSettings` 透传原状态修改逻辑 |
+| 打卡功能正常 | `[~]` | 未做手工回归，`onPunch` 透传至原 `handlePunchNow()` |
+| 打卡编辑/删除正常 | `[~]` | 未做手工回归，上下班时间卡片编辑透传至原 `openTimePicker(field)`；删除逻辑未在本阶段改动 |
+| 汇总卡片数据正确 | `[~]` | 未做手工回归，汇总计算仍由 `Index.ets` 原方法完成并传入组件 |
+| 回到今天按钮行为正确 | `[~]` | 未做手工回归，缩放动画和 `jumpToToday()` 仍由父页面执行 |
+| 工程编译通过 | `[x]` | Build success |
 
 ---
 

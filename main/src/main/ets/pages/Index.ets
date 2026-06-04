@@ -19,6 +19,10 @@ import { ExcludedRangesCard } from '../components/index/ExcludedRangesCard';
 import { TargetHoursCard } from '../components/index/TargetHoursCard';
 import { DarkModeCard } from '../components/index/DarkModeCard';
 import { DataManagementCard } from '../components/index/DataManagementCard';
+import { MainHeader } from '../components/index/MainHeader';
+import { PunchCardSection } from '../components/index/PunchCardSection';
+import { SummaryCardsSection } from '../components/index/SummaryCardsSection';
+import { TodayTipButton } from '../components/index/TodayTipButton';
 import { RangeEditDialog } from '../components/dialogs/RangeEditDialog';
 import { RangeConflictDialog } from '../components/dialogs/RangeConflictDialog';
 import { CustomTimePickerDialog } from './CustomTimePickerDialog';
@@ -166,43 +170,13 @@ struct Index {
 
   @Builder
   buildMainHeader() {
-    Column({ space: 16 }) {
-      Stack({ alignContent: Alignment.Center }) {
-        Text('打卡')
-          .fontSize(28)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-
-        Row() {
-          Button('设置')
-            .height(42)
-            .fontSize(14)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
-            .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-            .borderRadius(21)
-            .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-            .padding({ left: 18, right: 18 })
-            .onClick(() => {
-              this.showSettingsPage = true;
-            });
-        }
-        .width('100%')
-        .justifyContent(FlexAlign.Start);
+    MainHeader({
+      darkModeEnabled: this.darkModeEnabled,
+      selectedDateKey: this.selectedDateKey,
+      onOpenSettings: (): void => {
+        this.showSettingsPage = true;
       }
-      .width('100%')
-      .height(42);
-
-      Row() {
-        Blank();
-        Text(TimeUtils.getSelectedDateDescription(this.selectedDateKey))
-          .fontSize(13)
-          .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-        Blank();
-      }
-      .width('100%');
-    }
-    .width('100%');
+    });
   }
 
   @Builder
@@ -438,16 +412,10 @@ struct Index {
             .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
             .layoutWeight(1);
 
-          Button('今日')
-            .height(30)
-            .fontSize(13)
-            .fontColor(this.darkModeEnabled ? '#8B9EF5' : '#2E67F8')
-            .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#EEF3FF')
-            .borderRadius(15)
-            .padding({ left: 12, right: 12 })
-            .scale({ x: this.todayButtonScale, y: this.todayButtonScale })
-            .animation({ duration: 200, curve: Curve.EaseInOut })
-            .onClick(() => {
+          TodayTipButton({
+            darkModeEnabled: this.darkModeEnabled,
+            todayButtonScale: this.todayButtonScale,
+            onTap: (): void => {
               this.todayButtonScale = 0.88;
               this.getUIContext().animateTo({ duration: 120, curve: Curve.EaseOut }, () => {
                 this.todayButtonScale = 1.05;
@@ -456,7 +424,8 @@ struct Index {
                 this.todayButtonScale = 1;
               });
               this.jumpToToday();
-            });
+            }
+          });
         }
         .width('100%')
         .justifyContent(FlexAlign.SpaceBetween)
@@ -650,161 +619,35 @@ struct Index {
 
   @Builder
   buildPunchCard() {
-    Column({ space: 16 }) {
-      Row() {
-        Column({ space: 4 }) {
-          Text('当前日期')
-            .fontSize(12)
-            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-          Text(this.getSelectedDateLabel())
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-        }
-
-        Text('工时 ' + TimeUtils.formatMinutes(this.getSelectedWorkMinutes()))
-          .fontSize(14)
-          .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
-          .padding({ left: 12, right: 12, top: 8, bottom: 8 })
-          .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#EEF3FF')
-          .borderRadius(18);
+    PunchCardSection({
+      darkModeEnabled: this.darkModeEnabled,
+      selectedDateLabel: this.getSelectedDateLabel(),
+      selectedDateKey: this.selectedDateKey,
+      selectedWorkMinutes: this.getSelectedWorkMinutes(),
+      startTimeText: this.getStartTimeText(),
+      endTimeText: this.getEndTimeText(),
+      excludeSummaryText: this.getExcludeSummaryText(),
+      holiday: this.isHoliday(),
+      punchCardScale: this.punchCardScale,
+      punchButtonGlow: this.punchButtonGlow,
+      onPunch: (): void => {
+        this.handlePunchNow();
+      },
+      onEditPunch: (field: string): void => {
+        this.openTimePicker(field);
       }
-      .width('100%')
-      .justifyContent(FlexAlign.SpaceBetween)
-      .alignItems(VerticalAlign.Center);
-
-      Row({ space: 12 }) {
-        this.buildTimeCard('上班打卡', 'start');
-        this.buildTimeCard('下班打卡', 'end');
-      }
-      .width('100%');
-
-      Row() {
-        Text(this.getExcludeSummaryText())
-          .fontSize(13)
-          .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-        Blank();
-        Text(this.isHoliday() ? '节假日' : '')
-          .fontSize(13)
-          .fontColor('#D85353')
-          .visibility(this.isHoliday() ? Visibility.Visible : Visibility.None);
-      }
-      .width('100%')
-      .justifyContent(FlexAlign.Start);
-
-      // 打卡按钮带绿色脉冲动画
-      Stack({ alignContent: Alignment.Center }) {
-        Button('立即打卡')
-          .width('100%')
-          .height(54)
-          .fontSize(18)
-          .fontWeight(FontWeight.Bold)
-          .fontColor('#FFFFFF')
-          .backgroundColor('#2E67F8')
-          .borderRadius(22)
-          .scale({ x: this.punchCardScale, y: this.punchCardScale })
-          .onClick(() => {
-            this.handlePunchNow();
-          });
-
-        // 绿色脉冲效果
-        if (this.punchButtonGlow > 0) {
-          Column()
-            .width('100%')
-            .height(54)
-            .borderRadius(22)
-            .border({
-              width: 2,
-              color: this.darkModeEnabled ? '#2ED67C' : '#1EA97C'
-            })
-            .opacity(this.punchButtonGlow * 0.6)
-            .scale({ x: 1 + this.punchButtonGlow * 0.1, y: 1 + this.punchButtonGlow * 0.1 })
-            .backgroundColor(this.darkModeEnabled ? '#2ED67C' : '#1EA97C')
-        }
-      }
-      .width('100%');
-    }
-    .width('100%')
-    .padding(16)
-    .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-    .borderRadius(24)
-    .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-    .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
-    .animation({ duration: 220, curve: Curve.EaseInOut });
-  }
-
-  @Builder
-  buildTimeCard(title: string, field: string) {
-    Button() {
-      Column({ space: 8 }) {
-        Text(title)
-          .fontSize(13)
-          .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-        Text(field === 'start' ? this.getStartTimeText() : this.getEndTimeText())
-          .fontSize(22)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
-          .animation({ duration: 200, curve: Curve.EaseInOut });
-      }
-      .width('100%')
-      .alignItems(HorizontalAlign.Start);
-    }
-    .layoutWeight(1)
-    .height(110)
-    .padding(14)
-    .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
-    .borderRadius(18)
-    .animation({ duration: 200, curve: Curve.EaseInOut })
-    .onClick(() => {
-      this.openTimePicker(field);
     });
   }
 
   @Builder
   buildSummaryCards() {
-    Column({ space: 12 }) {
-      Row({ space: 12 }) {
-        ForEach(this.getSummaryItems(), (item: SummaryItem) => {
-          Column({ space: 8 }) {
-            Text(item.title)
-              .fontSize(13)
-              .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-            Text(item.value)
-              .fontSize(22)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
-              .animation({ duration: 200, curve: Curve.EaseInOut });
-          }
-          .layoutWeight(1)
-          .padding(16)
-          .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-          .borderRadius(24)
-          .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-          .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
-          .animation({ duration: 220, curve: Curve.EaseInOut });
-        }, (item: SummaryItem) => item.title + '_' + this.summaryRefreshKey.toString());
-      }
-      .width('100%');
-
-      Column({ space: 6 }) {
-        Text('与目标平均工时对比')
-          .fontSize(13)
-          .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-        Text(this.getDifferenceLabel())
-          .fontSize(22)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(this.getDifferenceColor())
-          .animation({ duration: 200, curve: Curve.EaseInOut });
-      }
-      .width('100%')
-      .padding(16)
-      .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-      .borderRadius(24)
-      .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-      .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
-      .animation({ duration: 420, curve: Curve.EaseOut });
-    }
-    .width('100%');
+    SummaryCardsSection({
+      darkModeEnabled: this.darkModeEnabled,
+      summaryItems: this.getSummaryItems(),
+      summaryRefreshKey: this.summaryRefreshKey,
+      differenceLabel: this.getDifferenceLabel(),
+      differenceColor: this.getDifferenceColor()
+    });
   }
 
   // ========== 业务逻辑方法 ==========

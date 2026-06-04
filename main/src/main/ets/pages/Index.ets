@@ -12,6 +12,7 @@ import { SummaryItem } from '../model/SummaryItem';
 import { TimeUtils } from '../service/TimeUtils';
 import { StorageService, PersistState } from '../service/StorageService';
 import { PunchCalculator } from '../service/PunchCalculator';
+import { IndexCalendarService } from '../service/IndexCalendarService';
 import { DEFAULT_RANGE_END, DEFAULT_RANGE_START, DEFAULT_TARGET_HOURS, DEFAULT_WORKDAY_START, HOLIDAYS_2026, WEEKDAY_NAMES } from '../constants/IndexConstants';
 import { SettingsHeader } from '../components/index/SettingsHeader';
 import { WorkdayStartCard } from '../components/index/WorkdayStartCard';
@@ -22,7 +23,8 @@ import { DataManagementCard } from '../components/index/DataManagementCard';
 import { MainHeader } from '../components/index/MainHeader';
 import { PunchCardSection } from '../components/index/PunchCardSection';
 import { SummaryCardsSection } from '../components/index/SummaryCardsSection';
-import { TodayTipButton } from '../components/index/TodayTipButton';
+import { CalendarCard } from '../components/index/CalendarCard';
+import { ExpandedCalendarPanel } from '../components/index/ExpandedCalendarPanel';
 import { RangeEditDialog } from '../components/dialogs/RangeEditDialog';
 import { RangeConflictDialog } from '../components/dialogs/RangeConflictDialog';
 import { CustomTimePickerDialog } from './CustomTimePickerDialog';
@@ -43,7 +45,6 @@ struct Index {
   @State showRangeConflictDialog: boolean = false;
   @State rangeStartInput: string = DEFAULT_RANGE_START;
   @State rangeEndInput: string = DEFAULT_RANGE_END;
-  @State calendarTouchStartX: number = 0;
   @State settingsTouchStartX: number = 0;
   @State punchCardScale: number = 1;
   @State punchButtonGlow: number = 0;
@@ -402,76 +403,28 @@ struct Index {
 
   @Builder
   buildCalendarCard() {
-    Column() {
-      Column({ space: 14 }) {
-        // 点击标题区域打开月历
-        Row() {
-          Text(TimeUtils.getCurrentMonthTitle(this.displayYear, this.displayMonth))
-            .fontSize(18)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
-            .layoutWeight(1);
-
-          TodayTipButton({
-            darkModeEnabled: this.darkModeEnabled,
-            todayButtonScale: this.todayButtonScale,
-            onTap: (): void => {
-              this.todayButtonScale = 0.88;
-              this.getUIContext().animateTo({ duration: 120, curve: Curve.EaseOut }, () => {
-                this.todayButtonScale = 1.05;
-              });
-              this.getUIContext().animateTo({ duration: 180, delay: 120, curve: Curve.FastOutSlowIn }, () => {
-                this.todayButtonScale = 1;
-              });
-              this.jumpToToday();
-            }
-          });
-        }
-        .width('100%')
-        .justifyContent(FlexAlign.SpaceBetween)
-        .alignItems(VerticalAlign.Center)
-        .onClick(() => {
-          this.calendarExpanded = true;
-        });
-
-        Row() {
-          ForEach(WEEKDAY_NAMES, (item: string) => {
-            Text(item)
-              .layoutWeight(1)
-              .textAlign(TextAlign.Center)
-              .fontSize(12)
-              .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-          }, (item: string) => item);
-        }
-        .width('100%');
-
-        Row({ space: 8 }) {
-          ForEach(this.getCurrentWeekSlots(this.buildMonthSlots()), (slot: CalendarSlot) => {
-            this.buildDayCell(slot, false);
-          }, (slot: CalendarSlot) => slot.key + '_collapsed_' + this.weekContentKey.toString());
-        }
-        .width('100%');
+    CalendarCard({
+      darkModeEnabled: this.darkModeEnabled,
+      displayYear: this.displayYear,
+      displayMonth: this.displayMonth,
+      selectedDateKey: this.selectedDateKey,
+      todayButtonScale: this.todayButtonScale,
+      weekContentKey: this.weekContentKey,
+      weekSlots: this.getCurrentWeekSlots(),
+      onOpen: (): void => {
+        this.calendarExpanded = true;
+      },
+      onTodayTap: (): void => {
+        this.playTodayButtonAnimation();
+        this.jumpToToday();
+      },
+      onSwipe: (offsetX: number): void => {
+        this.handleCalendarSwipe(offsetX);
+      },
+      onSelectDate: (dateKey: string, collapseAfterSelect: boolean): void => {
+        this.selectCalendarDate(dateKey, collapseAfterSelect);
       }
-      .width('100%')
-      .alignItems(HorizontalAlign.Start);
-    }
-    .width('100%')
-    .padding(16)
-    .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-    .borderRadius(24)
-    .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-    .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
-    .animation({ duration: 220, curve: Curve.EaseInOut })
-    .gesture(
-      PanGesture({ direction: PanDirection.Horizontal })
-        .onActionStart((event: GestureEvent) => {
-          this.calendarTouchStartX = event.offsetX;
-        })
-        .onActionEnd((event: GestureEvent) => {
-          let offsetX: number = event.offsetX - this.calendarTouchStartX;
-          this.handleCalendarSwipe(offsetX);
-        })
-    );
+    });
   }
 
   @Builder
@@ -486,135 +439,31 @@ struct Index {
           this.calendarExpanded = false;
         });
 
-      this.buildExpandedCalendarPanel();
+      ExpandedCalendarPanel({
+        darkModeEnabled: this.darkModeEnabled,
+        displayYear: this.displayYear,
+        displayMonth: this.displayMonth,
+        selectedDateKey: this.selectedDateKey,
+        monthContentKey: this.monthContentKey,
+        rows: this.getExpandedCalendarRows(),
+        onClose: (): void => {
+          this.calendarExpanded = false;
+        },
+        onPreviousMonth: (): void => {
+          this.goToPreviousMonth();
+        },
+        onNextMonth: (): void => {
+          this.goToNextMonth();
+        },
+        onSelectDate: (dateKey: string, collapseAfterSelect: boolean): void => {
+          this.selectCalendarDate(dateKey, collapseAfterSelect);
+        }
+      });
     }
     .width('100%')
     .height('100%')
     .transition(TransitionEffect.OPACITY)
     .animation({ duration: 220, curve: Curve.EaseInOut });
-  }
-
-  @Builder
-  buildExpandedCalendarPanel() {
-    Column({ space: 14 }) {
-      // 点击标题区域关闭月历
-      Row() {
-        Text(TimeUtils.getCurrentMonthTitle(this.displayYear, this.displayMonth))
-          .fontSize(22)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
-          .layoutWeight(1);
-      }
-      .width('100%')
-      .alignItems(VerticalAlign.Center)
-      .onClick(() => {
-        this.calendarExpanded = false;
-      });
-
-      Row() {
-        ForEach(WEEKDAY_NAMES, (item: string) => {
-          Text(item)
-            .layoutWeight(1)
-            .textAlign(TextAlign.Center)
-            .fontSize(12)
-            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-        }, (item: string) => item + '_expanded');
-      }
-      .width('100%');
-
-      Column({ space: 8 }) {
-        ForEach(this.getExpandedCalendarRows(), (row: CalendarSlot[], rowIndex: number) => {
-          Row({ space: 8 }) {
-            ForEach(row, (slot: CalendarSlot) => {
-              this.buildDayCell(slot, true);
-            }, (slot: CalendarSlot) => slot.key + '_expanded');
-          }
-          .width('100%')
-          .transition(TransitionEffect.translate({ x: 12, y: 0 }).combine(TransitionEffect.OPACITY).animation({ duration: 200, curve: Curve.EaseInOut }));
-        }, (_row: CalendarSlot[], rowIndex: number) => 'exp_row_' + this.monthContentKey.toString() + '_' + rowIndex.toString());
-      }
-      .width('100%');
-
-      // 底部空白区域，点击关闭
-      Blank()
-        .height(10)
-        .onClick(() => {
-          this.calendarExpanded = false;
-        });
-    }
-    .width('92%')
-    .padding(18)
-    .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-    .borderRadius(28)
-    .shadow({ radius: 20, color: this.darkModeEnabled ? '#0000004D' : '#30223C5C', offsetX: 0, offsetY: 10 })
-    .animation({ duration: 220, curve: Curve.EaseInOut })
-    .gesture(
-      PanGesture({ direction: PanDirection.Horizontal })
-        .onActionStart((event: GestureEvent) => {
-          this.calendarTouchStartX = event.offsetX;
-        })
-        .onActionEnd((event: GestureEvent) => {
-          let offsetX: number = event.offsetX - this.calendarTouchStartX;
-          if (offsetX <= -60) {
-            this.goToNextMonth();
-          } else if (offsetX >= 60) {
-            this.goToPreviousMonth();
-          }
-        })
-    );
-  }
-
-  @Builder
-  buildDayCell(slot: CalendarSlot, collapseAfterSelect: boolean) {
-    if (!slot.inCurrentMonth) {
-      Blank()
-        .layoutWeight(1)
-        .height(48);
-    } else {
-      Column({ space: 3 }) {
-        Text(slot.day.toString())
-          .fontSize(15)
-          .fontWeight(slot.dateKey === this.selectedDateKey ? FontWeight.Bold : FontWeight.Regular)
-          .fontColor(slot.dateKey === this.selectedDateKey ? '#FFFFFF' : (this.darkModeEnabled ? '#E8EDF5' : '#132033'));
-        Row({ space: 4 }) {
-          if (slot.punchCount >= 1) {
-            Row()
-              .width(5)
-              .height(5)
-              .borderRadius(3)
-              .backgroundColor(slot.dateKey === this.selectedDateKey ? '#FFFFFF' : '#1EA97C');
-          }
-          if (slot.punchCount >= 2) {
-            Row()
-              .width(5)
-              .height(5)
-              .borderRadius(3)
-              .backgroundColor(slot.dateKey === this.selectedDateKey ? '#FFFFFF' : '#1EA97C');
-          }
-        }
-        .width('100%')
-        .justifyContent(FlexAlign.Center)
-        .height(12);
-      }
-      .layoutWeight(1)
-      .height(48)
-      .justifyContent(FlexAlign.Center)
-      .backgroundColor(this.getDayCellColor(slot))
-      .borderRadius(15)
-      .border(slot.isToday && slot.dateKey !== this.selectedDateKey ? { width: 1, color: this.darkModeEnabled ? '#4A5A8A' : '#BFD4FF' } : { width: 0, color: '#00000000' })
-      .animation({ duration: 200, curve: Curve.EaseInOut })
-      .transition(TransitionEffect.translate({ x: 12, y: 0 }).combine(TransitionEffect.OPACITY).animation({ duration: 200, curve: Curve.EaseInOut }))
-      .onClick(() => {
-        this.selectedDateKey = slot.dateKey;
-        this.calendarWeekOffset = 0;
-        this.syncDisplayMonthToSelectedDate();
-        if (collapseAfterSelect) {
-          this.calendarExpanded = false;
-        }
-        this.summaryRefreshKey++;
-        this.persistState();
-      });
-    }
   }
 
   @Builder
@@ -872,6 +721,27 @@ struct Index {
     this.persistState();
   }
 
+  playTodayButtonAnimation(): void {
+    this.todayButtonScale = 0.88;
+    this.getUIContext().animateTo({ duration: 120, curve: Curve.EaseOut }, () => {
+      this.todayButtonScale = 1.05;
+    });
+    this.getUIContext().animateTo({ duration: 180, delay: 120, curve: Curve.FastOutSlowIn }, () => {
+      this.todayButtonScale = 1;
+    });
+  }
+
+  selectCalendarDate(dateKey: string, collapseAfterSelect: boolean): void {
+    this.selectedDateKey = dateKey;
+    this.calendarWeekOffset = 0;
+    this.syncDisplayMonthToSelectedDate();
+    if (collapseAfterSelect) {
+      this.calendarExpanded = false;
+    }
+    this.summaryRefreshKey++;
+    this.persistState();
+  }
+
   handleCalendarSwipe(offsetX: number): void {
     if (offsetX <= -60) {
       if (this.calendarExpanded) {
@@ -964,104 +834,21 @@ struct Index {
   }
 
   getExpandedCalendarRows(): CalendarSlot[][] {
-    let allSlots: CalendarSlot[] = this.buildMonthSlots();
-    let result: CalendarSlot[][] = [];
-    let index: number = 0;
-    while (index < allSlots.length) {
-      let row: CalendarSlot[] = [];
-      let rowInnerIndex: number = 0;
-      while (rowInnerIndex < 7 && index < allSlots.length) {
-        row.push(allSlots[index]);
-        rowInnerIndex += 1;
-        index += 1;
-      }
-      result.push(row);
-    }
-    return result;
+    return IndexCalendarService.getExpandedCalendarRows(this.buildMonthSlots());
   }
 
   buildMonthSlots(): CalendarSlot[] {
-    let result: CalendarSlot[] = [];
-    let firstDay: Date = new Date(this.displayYear, this.displayMonth, 1);
-    let firstWeekDay: number = firstDay.getDay();
-    let firstColumn: number = firstWeekDay === 0 ? 6 : firstWeekDay - 1;
-    let blankIndex: number = 0;
-    while (blankIndex < firstColumn) {
-      result.push(new CalendarSlot('blank_' + blankIndex.toString(), 0, '', false, false, 0));
-      blankIndex += 1;
-    }
-
-    let lastDayNumber: number = new Date(this.displayYear, this.displayMonth + 1, 0).getDate();
-    let day: number = 1;
-    while (day <= lastDayNumber) {
-      let date: Date = new Date(this.displayYear, this.displayMonth, day);
-      let dateKey: string = TimeUtils.createDateKey(date);
-      let slot: CalendarSlot = new CalendarSlot(
-        dateKey,
-        day,
-        dateKey,
-        true,
-        dateKey === TimeUtils.createDateKey(new Date()),
-        this.getRecordPunchCount(dateKey)
-      );
-      result.push(slot);
-      day += 1;
-    }
-
-    while (result.length % 7 !== 0) {
-      result.push(new CalendarSlot('tail_' + result.length.toString(), 0, '', false, false, 0));
-    }
-    return result;
+    return IndexCalendarService.buildMonthSlots(this.displayYear, this.displayMonth, this.records);
   }
 
-  getCurrentWeekSlots(allSlots: CalendarSlot[]): CalendarSlot[] {
-    // 基于选中日期计算偏移后的周一日期
-    let selectedDate: Date | null = TimeUtils.parseDateKey(this.selectedDateKey);
-    if (selectedDate === null) {
-      return [];
-    }
-
-    // 计算选中日期是周几（周一=0, 周日=6）
-    let dayOfWeek: number = selectedDate.getDay();
-    let weekStartOffset: number = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-
-    // 计算当前周的周一
-    let monday: Date = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + weekStartOffset);
-    // 加上 calendarWeekOffset 周的偏移
-    let targetMonday: Date = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + this.calendarWeekOffset * 7);
-
-    // 构建一周7天的 slots（注：displayYear/displayMonth 由调用方在 goToPreviousWeek/goToNextWeek 中更新）
-    let row: CalendarSlot[] = [];
-    let todayKey: string = TimeUtils.createDateKey(new Date());
-    for (let i: number = 0; i < 7; i++) {
-      let date: Date = new Date(targetMonday.getFullYear(), targetMonday.getMonth(), targetMonday.getDate() + i);
-      let dateKey: string = TimeUtils.createDateKey(date);
-      // 判断是否在当前月份（用于样式控制）
-      let inCurrentMonth: boolean = (date.getFullYear() === this.displayYear && date.getMonth() === this.displayMonth);
-      let slot: CalendarSlot = new CalendarSlot(
-        dateKey,
-        date.getDate(),
-        dateKey,
-        inCurrentMonth,
-        dateKey === todayKey,
-        this.getRecordPunchCount(dateKey)
-      );
-      row.push(slot);
-    }
-    return row;
-  }
-
-  getDayCellColor(slot: CalendarSlot): string {
-    if (!slot.inCurrentMonth) {
-      return '#00000000';
-    }
-    if (slot.dateKey === this.selectedDateKey) {
-      return '#2E67F8';
-    }
-    if (slot.isToday) {
-      return this.darkModeEnabled ? '#2D3548' : '#EEF3FF';
-    }
-    return this.darkModeEnabled ? '#1E2636' : '#F6F8FC';
+  getCurrentWeekSlots(): CalendarSlot[] {
+    return IndexCalendarService.getCurrentWeekSlots(
+      this.selectedDateKey,
+      this.displayYear,
+      this.displayMonth,
+      this.calendarWeekOffset,
+      this.records
+    );
   }
 
   getSelectedDateLabel(): string {
@@ -1432,14 +1219,6 @@ struct Index {
 
   isHoliday(): boolean {
     return HOLIDAYS_2026.includes(this.selectedDateKey);
-  }
-
-  getRecordPunchCount(dateKey: string): number {
-    let record: DailyPunchRecord | null = this.getRecordByDateKey(dateKey);
-    if (record === null) {
-      return 0;
-    }
-    return record.punches.length;
   }
 
   getRecordByDateKey(dateKey: string): DailyPunchRecord | null {

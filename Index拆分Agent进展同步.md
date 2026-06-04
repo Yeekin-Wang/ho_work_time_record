@@ -36,16 +36,16 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 
 | 项目 | 当前状态 |
 |---|---|
-| 当前阶段 | 阶段 3：主页面展示区拆分 |
-| 当前步骤 | 阶段 3 已完成主页头部、汇总区、打卡区与今日按钮组件拆分，待提交后进入阶段 4 |
-| 当前分支 | `refactor/index-stage3-main-sections` |
-| 最近一次执行时间 | 2026-06-04 15:55:00 |
+| 当前阶段 | 阶段 4：日历区域拆分 |
+| 当前步骤 | 已新建阶段 4 分支并完成日历卡片、展开日历面板、日期单元格与日历计算 service 初步拆分，待可用 Hvigor/DevEco 构建入口验证 |
+| 当前分支 | `refactor/index-stage4-calendar` |
+| 最近一次执行时间 | 2026-06-04 18:09:03 |
 | 最近一次执行人/Agent | OpenAI Codex Agent |
-| 最近一次编译结果 | 成功（阶段 3 修改后执行构建验证通过） |
-| 最近一次回归结果 | 已修复打卡时间不实时更新问题并完成编译级验证，未执行真机/手工页面交互回归 |
+| 最近一次编译结果 | 未完成（当前终端环境未提供 `hvigorw.bat`/`hvigor` 命令，待 DevEco 或可用 Hvigor 环境验证） |
+| 最近一次回归结果 | 已完成代码级检查与迁移范围核对，未执行真机/手工页面交互回归 |
 | 是否存在阻塞 | 否 |
-| 阻塞摘要 | 无 |
-| 下一步计划 | 提交阶段 3 代码后，进入阶段 4 拆分日历区域组件与日历计算 service |
+| 阻塞摘要 | 无；构建命令不可用已记录为验证环境限制 |
+| 下一步计划 | 在可用构建环境执行阶段 4 编译验证，修复可能的 ArkTS 编译问题后提交阶段 4 代码 |
 
 ---
 
@@ -57,7 +57,7 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 | 2 | 阶段 1 | 常量与设置页拆分 | 必做 | `[x]` | 2026-06-03 13:05:00 | 已完成常量文件与设置页组件抽离，构建通过 |
 | 3 | 阶段 2 | 弹窗拆分 | 必做 | `[x]` | 2026-06-04 15:20:00 | 已完成排除时段编辑弹窗与冲突提示弹窗抽离，构建通过 |
 | 4 | 阶段 3 | 主页面展示区拆分 | 必做 | `[x]` | 2026-06-04 15:55:00 | 已完成主页展示区抽离，并修复打卡时间实时更新问题，构建通过 |
-| 5 | 阶段 4 | 日历区域拆分 | 必做 | `[ ]` |  |  |
+| 5 | 阶段 4 | 日历区域拆分 | 必做 | `[-]` | 2026-06-04 18:09:03 | 已完成日历 UI 与计算 service 初步拆分，待构建验证 |
 | 6 | 阶段 5 | 导入导出与持久化 service 化 | 必做 | `[ ]` |  |  |
 | 7 | 阶段 8 | 收尾优化 | 必做 | `[ ]` |  |  |
 | 8 | 阶段 6 | 设置页页面化 | 可选 | `[ ]` |  |  |
@@ -331,60 +331,60 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 
 | 项目 | 内容 |
 |---|---|
-| 阶段状态 | `[ ]` |
+| 阶段状态 | `[-]` |
 | 目标分支 | `refactor/index-stage4-calendar` |
-| 开始时间 |  |
+| 开始时间 | 2026-06-04 18:09:03 |
 | 完成时间 |  |
-| 编译结果 | 未执行 |
-| 回归结果 | 未执行 |
+| 编译结果 | 未完成（当前终端环境未提供 `hvigorw.bat`/`hvigor` 命令） |
+| 回归结果 | 已完成代码级迁移检查，未执行真机/手工日历交互回归 |
 | 是否允许进入下一阶段 | 未确认 |
 
 ### 9.2 步骤进度
 
 | 步骤 | 内容 | 状态 | 执行记录 |
 |---|---|---|---|
-| Step 1 | 创建/切换阶段分支 | `[ ]` |  |
-| Step 2 | 新建 `CalendarCard.ets` | `[ ]` |  |
-| Step 3 | 提取折叠态日历 UI | `[ ]` |  |
-| Step 4 | 接入折叠态日历入参和回调 | `[ ]` |  |
-| Step 5 | 新建 `ExpandedCalendarPanel.ets` | `[ ]` |  |
-| Step 6 | 提取展开态日历覆盖层 UI | `[ ]` |  |
-| Step 7 | 接入展开态日历入参和回调 | `[ ]` |  |
-| Step 8 | 评估是否需要 `DayCell.ets` | `[ ]` |  |
-| Step 9 | 如有必要，新增并接入 `DayCell.ets` | `[~]` | 默认按复杂度决定 |
-| Step 10 | 新建 `IndexCalendarService.ets` | `[ ]` |  |
-| Step 11 | 提取 `buildMonthSlots()` | `[ ]` |  |
-| Step 12 | 提取 `getCurrentWeekSlots()` | `[ ]` |  |
-| Step 13 | 提取 `getExpandedCalendarRows()` | `[ ]` |  |
-| Step 14 | 提取 `getDayCellColor()` | `[ ]` |  |
-| Step 15 | 确认 service 不直接修改页面状态 | `[ ]` |  |
-| Step 16 | 页面接入日历 service | `[ ]` |  |
-| Step 17 | 执行日历功能回归 | `[ ]` |  |
-| Step 18 | 执行阶段编译验证 | `[ ]` |  |
+| Step 1 | 创建/切换阶段分支 | `[x]` | 已从 `refactor/index-stage3-main-sections` 新建并切换到 `refactor/index-stage4-calendar` |
+| Step 2 | 新建 `CalendarCard.ets` | `[x]` | 已新增折叠态日历卡片组件 |
+| Step 3 | 提取折叠态日历 UI | `[x]` | 已将原 `buildCalendarCard()` 的标题、星期行、周视图与滑动手势迁移到组件 |
+| Step 4 | 接入折叠态日历入参和回调 | `[x]` | 已接入月份、选中日期、今日按钮缩放、周 slots、展开/今日/滑动/选中日期回调 |
+| Step 5 | 新建 `ExpandedCalendarPanel.ets` | `[x]` | 已新增展开态日历面板组件 |
+| Step 6 | 提取展开态日历覆盖层 UI | `[x]` | 面板 UI 已迁移；遮罩层仍保留在 `Index.ets` 负责显示与关闭编排 |
+| Step 7 | 接入展开态日历入参和回调 | `[x]` | 已接入月份、选中日期、月 rows、关闭、前后月、选中日期回调 |
+| Step 8 | 评估是否需要 `DayCell.ets` | `[x]` | 折叠态与展开态共用日期单元格，决定抽出 `DayCell.ets` |
+| Step 9 | 如有必要，新增并接入 `DayCell.ets` | `[x]` | 已新增并由 `CalendarCard`、`ExpandedCalendarPanel` 共用 |
+| Step 10 | 新建 `IndexCalendarService.ets` | `[x]` | 已新增日历纯计算 service |
+| Step 11 | 提取 `buildMonthSlots()` | `[x]` | 已迁移为 `IndexCalendarService.buildMonthSlots()` |
+| Step 12 | 提取 `getCurrentWeekSlots()` | `[x]` | 已迁移为 `IndexCalendarService.getCurrentWeekSlots()` |
+| Step 13 | 提取 `getExpandedCalendarRows()` | `[x]` | 已迁移为 `IndexCalendarService.getExpandedCalendarRows()` |
+| Step 14 | 提取 `getDayCellColor()` | `[x]` | 已迁移为 `IndexCalendarService.getDayCellColor()` |
+| Step 15 | 确认 service 不直接修改页面状态 | `[x]` | service 只接收入参并返回 slots/颜色，不持有或修改 `@State` |
+| Step 16 | 页面接入日历 service | `[x]` | `Index.ets` 保留事件调度、持久化、动画状态，slot/颜色计算委托给 service |
+| Step 17 | 执行日历功能回归 | `[~]` | 已完成代码级检查，未执行真机/手工日历交互回归 |
+| Step 18 | 执行阶段编译验证 | `[!]` | 尝试 `./hvigorw.bat` 与 `hvigor` 均失败，当前终端环境未提供构建命令 |
 | Step 19 | 提交阶段代码 | `[ ]` |  |
 
 ### 9.3 文件变更记录
 
 | 类型 | 文件 | 说明 |
 |---|---|---|
-| 新增 | `main/src/main/ets/components/index/CalendarCard.ets` |  |
-| 新增 | `main/src/main/ets/components/index/ExpandedCalendarPanel.ets` |  |
-| 新增 | `main/src/main/ets/components/index/DayCell.ets` | 可选 |
-| 新增 | `main/src/main/ets/service/IndexCalendarService.ets` |  |
-| 修改 | `main/src/main/ets/pages/Index.ets` |  |
+| 新增 | `main/src/main/ets/components/index/CalendarCard.ets` | 折叠态日历卡片展示组件 |
+| 新增 | `main/src/main/ets/components/index/ExpandedCalendarPanel.ets` | 展开态日历面板展示组件 |
+| 新增 | `main/src/main/ets/components/index/DayCell.ets` | 折叠态与展开态共用日期单元格组件 |
+| 新增 | `main/src/main/ets/service/IndexCalendarService.ets` | 日历 slots、展开 rows 与日期单元格颜色纯计算 service |
+| 修改 | `main/src/main/ets/pages/Index.ets` | 接入日历组件与 service，保留页面状态、动画、持久化和事件调度 |
 
 ### 9.4 回归记录
 
 | 验证项 | 状态 | 备注 |
 |---|---|---|
-| 折叠态日历显示正常 | `[ ]` |  |
-| 展开态日历显示正常 | `[ ]` |  |
-| 日期切换正常 | `[ ]` |  |
-| 周切换正常 | `[ ]` |  |
-| 月切换正常 | `[ ]` |  |
-| 选中日期高亮正确 | `[ ]` |  |
-| 节假日/工作日/排除时段显示正确 | `[ ]` |  |
-| 工程编译通过 | `[ ]` |  |
+| 折叠态日历显示正常 | `[~]` | 已完成代码级迁移检查，未执行真机/手工回归 |
+| 展开态日历显示正常 | `[~]` | 已完成代码级迁移检查，未执行真机/手工回归 |
+| 日期切换正常 | `[~]` | 选中日期逻辑保留在页面 `selectCalendarDate()`，未执行真机/手工回归 |
+| 周切换正常 | `[~]` | 周滑动仍回调页面 `handleCalendarSwipe()`，未执行真机/手工回归 |
+| 月切换正常 | `[~]` | 展开态左右滑仍回调页面前后月方法，未执行真机/手工回归 |
+| 选中日期高亮正确 | `[~]` | 高亮颜色迁移到 service，未执行真机/手工回归 |
+| 节假日/工作日/排除时段显示正确 | `[~]` | 本阶段未改业务规则；当前日历 cell 仍显示打卡点，未执行真机/手工回归 |
+| 工程编译通过 | `[!]` | 当前终端环境未提供 `hvigorw.bat`/`hvigor`，待可用构建环境验证 |
 
 ---
 
@@ -646,6 +646,22 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 
 ### 历史执行记录
 
+### 2026-06-04 18:09 执行记录
+
+- 执行阶段：阶段 4：日历区域拆分
+- 执行步骤：Step 1 - Step 18（Step 18 构建验证因当前终端环境缺少 Hvigor 命令未完成）
+- 执行前状态：阶段 3 已提交，当前从 `refactor/index-stage3-main-sections` 新建 `refactor/index-stage4-calendar`
+- 本次完成内容：抽离折叠态日历卡片、展开态日历面板、共用日期单元格；新增日历纯计算 service；`Index.ets` 保留页面状态、动画、持久化和事件调度，仅负责组件编排与调用 service
+- 新增文件：`main/src/main/ets/components/index/CalendarCard.ets`、`main/src/main/ets/components/index/ExpandedCalendarPanel.ets`、`main/src/main/ets/components/index/DayCell.ets`、`main/src/main/ets/service/IndexCalendarService.ets`
+- 修改文件：`main/src/main/ets/pages/Index.ets`、`Index拆分Agent进展同步.md`
+- 删除文件：无
+- 编译结果：未完成；当前终端环境执行 `./hvigorw.bat --mode module -p module=main assembleHap` 与 `hvigor --mode module -p module=main assembleHap` 均提示命令不存在
+- 回归结果：已完成代码级迁移检查与无残留 builder/import 搜索；未执行真机/手工日历交互回归
+- 遇到问题：当前仓库/终端未提供可用 Hvigor 构建入口
+- 处理方式：记录为验证环境限制；保留阶段 4 为进行中，等待可用 DevEco/Hvigor 环境执行构建验证
+- 是否存在阻塞：否（代码拆分可继续审阅；进入下一阶段前仍需补构建验证）
+- 下一步计划：在可用构建环境完成阶段 4 编译验证，修复可能的 ArkTS 编译问题后提交阶段 4 代码
+
 ### 2026-06-04 15:20 执行记录
 
 - 执行阶段：阶段 2：弹窗拆分
@@ -671,6 +687,8 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 |---|---|---|---|---|---|
 | 2026-06-04 15:18 | 阶段 2：弹窗拆分 | `builtin_check_editor_errors` | 通过 | 无 | 已完成 |
 | 2026-06-04 15:20 | 阶段 2：弹窗拆分 | `builtin_execute_build_command` | 通过 | Build success | 已完成 |
+| 2026-06-04 18:09 | 阶段 4：日历区域拆分 | `./hvigorw.bat --mode module -p module=main assembleHap` | 未通过 | 当前环境不存在 `hvigorw.bat` | 待可用构建环境验证 |
+| 2026-06-04 18:09 | 阶段 4：日历区域拆分 | `hvigor --mode module -p module=main assembleHap` | 未通过 | 当前 PATH 不存在 `hvigor` | 待可用构建环境验证 |
 |  |  |  |  |  |  |
 
 ---
@@ -679,6 +697,7 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 
 | 编号 | 发现时间 | 阶段 | 问题描述 | 影响范围 | 当前状态 | 处理结论 |
 |---|---|---|---|---|---|---|
+| IDX-S4-001 | 2026-06-04 18:09 | 阶段 4：日历区域拆分 | 当前终端环境未提供 `hvigorw.bat` 或 `hvigor` 构建命令 | 阶段 4 编译验证暂无法在当前终端完成 | 待验证 | 代码拆分已完成代码级检查；进入下一阶段前需在 DevEco 或可用 Hvigor 环境补构建验证 |
 |  |  |  |  |  |  |  |
 
 ---
@@ -713,6 +732,6 @@ Agent 每次执行后应遵循以下更新规则：
 当前默认从以下任务开始：
 
 ```text
-阶段 3：主页面展示区拆分
-Step 1：创建/切换阶段分支 refactor/index-stage3-main-sections
+阶段 4：日历区域拆分
+Step 18：在可用 Hvigor/DevEco 环境执行阶段编译验证
 ```

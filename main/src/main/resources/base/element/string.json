@@ -13,6 +13,26 @@
       "value": "牛马工时簿"
     },
     {
+      "name": "QuickPunchFormAbility_label",
+      "value": "桌面打卡"
+    },
+    {
+      "name": "QuickPunchFormAbility_desc",
+      "value": "牛马工时簿桌面快捷打卡卡片"
+    },
+    {
+      "name": "widget_display_name",
+      "value": "快捷打卡"
+    },
+    {
+      "name": "widget_desc",
+      "value": "在桌面快速记录当前打卡时间"
+    },
+    {
+      "name": "widget_title",
+      "value": "工时簿"
+    },
+    {
       "name": "page_punch_title",
       "value": "打卡"
     },

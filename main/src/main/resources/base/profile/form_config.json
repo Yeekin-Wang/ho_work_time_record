@@ -1,0 +1,25 @@
+{
+  "forms": [
+    {
+      "name": "quick_punch_card",
+      "displayName": "$string:widget_display_name",
+      "description": "$string:widget_desc",
+      "src": "./ets/components/widget/QuickPunchCard.ets",
+      "uiSyntax": "arkts",
+      "window": {
+        "designWidth": 720,
+        "autoDesignWidth": true
+      },
+      "colorMode": "auto",
+      "isDynamic": false,
+      "isDefault": true,
+      "updateEnabled": true,
+      "scheduledUpdateTime": "00:05",
+      "updateDuration": 2,
+      "defaultDimension": "1*1",
+      "supportDimensions": [
+        "1*1"
+      ]
+    }
+  ]
+}

@@ -3,6 +3,8 @@ import { ExcludedRange } from '../main/ets/model/ExcludedRange';
 import { DailyPunchRecord } from '../main/ets/model/DailyPunchRecord';
 import { TimeUtils } from '../main/ets/service/TimeUtils';
 import { PunchCalculator } from '../main/ets/service/PunchCalculator';
+import { QuickPunchService } from '../main/ets/service/QuickPunchService';
+import { PersistState } from '../main/ets/service/IndexPreferencesService';
 import { CsvUtils } from '../main/ets/utils/CsvUtils';
 
 export default function localUnitTest() {
@@ -47,6 +49,43 @@ export default function localUnitTest() {
         new DailyPunchRecord('2026-07-01', [540, 1140])
       ];
       expect(PunchCalculator.getDisplayedMonthAverageMinutes(records, 2026, 5, '09:00', [])).assertEqual(540);
+    });
+  });
+
+  describe('QuickPunchService', () => {
+    it('creates today's record when no record exists', 0, () => {
+      let state: PersistState = new PersistState();
+      QuickPunchService.appendPunchToState(state, new Date(2026, 5, 5, 9, 3, 0));
+      expect(state.records.length).assertEqual(1);
+      expect(state.records[0].dateKey).assertEqual('2026-06-05');
+      expect(state.records[0].punches[0]).assertEqual(543);
+    });
+
+    it('appends second punch and keeps punches sorted', 0, () => {
+      let state: PersistState = new PersistState();
+      state.records = [new DailyPunchRecord('2026-06-05', [1080])];
+      QuickPunchService.appendPunchToState(state, new Date(2026, 5, 5, 9, 3, 0));
+      expect(state.records[0].punches.length).assertEqual(2);
+      expect(state.records[0].punches[0]).assertEqual(543);
+      expect(state.records[0].punches[1]).assertEqual(1080);
+    });
+
+    it('does not append duplicate punch in the same minute', 0, () => {
+      let state: PersistState = new PersistState();
+      state.records = [new DailyPunchRecord('2026-06-05', [543])];
+      let feedback: string = QuickPunchService.appendPunchToState(state, new Date(2026, 5, 5, 9, 3, 30));
+      expect(state.records[0].punches.length).assertEqual(1);
+      expect(feedback).assertEqual('刚刚已打卡');
+    });
+
+    it('builds current month average only from current month records', 0, () => {
+      let state: PersistState = new PersistState();
+      state.records = [
+        new DailyPunchRecord('2026-06-05', [540, 1080]),
+        new DailyPunchRecord('2026-07-01', [540, 1200])
+      ];
+      let cardState = QuickPunchService.buildCardStateFromPersistState(state, new Date(2026, 5, 5, 12, 0, 0), '');
+      expect(cardState.monthAverageText).assertEqual('9h 0m');
     });
   });
 

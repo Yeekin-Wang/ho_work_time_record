@@ -49,6 +49,7 @@ export class WorkTimeStateService {
     state.excludedRanges = PunchCalculator.copyRanges(source.excludedRanges);
     state.records = WorkTimeStateService.copyRecords(source.records);
     state.darkModeEnabled = source.darkModeEnabled;
+    state.themeMode = source.themeMode;
     return state;
   }
 

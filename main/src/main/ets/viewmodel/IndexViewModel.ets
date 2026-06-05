@@ -1,6 +1,6 @@
 import { ExcludedRange } from '../model/ExcludedRange';
 import { DailyPunchRecord } from '../model/DailyPunchRecord';
-import { DEFAULT_TARGET_HOURS, DEFAULT_WORKDAY_START } from '../constants/IndexConstants';
+import { DEFAULT_TARGET_HOURS, DEFAULT_WORKDAY_START, THEME_MODE_SYSTEM } from '../constants/IndexConstants';
 import { PersistState } from '../service/IndexPreferencesService';
 import { PunchCalculator } from '../service/PunchCalculator';
 import { TimeUtils } from '../service/TimeUtils';
@@ -14,6 +14,7 @@ export class IndexViewModel {
   excludedRanges: ExcludedRange[] = [];
   records: DailyPunchRecord[] = [];
   darkModeEnabled: boolean = false;
+  themeMode: string = THEME_MODE_SYSTEM;
 
   resetToToday(): void {
     this.selectedDateKey = TimeUtils.createDateKey(new Date());
@@ -42,6 +43,7 @@ export class IndexViewModel {
     state.excludedRanges = PunchCalculator.copyRanges(this.excludedRanges);
     state.records = IndexViewModel.copyRecords(this.records);
     state.darkModeEnabled = this.darkModeEnabled;
+    state.themeMode = this.themeMode;
     return state;
   }
 
@@ -54,6 +56,7 @@ export class IndexViewModel {
     this.excludedRanges = PunchCalculator.copyRanges(state.excludedRanges);
     this.records = IndexViewModel.copyRecords(state.records);
     this.darkModeEnabled = state.darkModeEnabled;
+    this.themeMode = state.themeMode;
   }
 
   static copyRecords(records: DailyPunchRecord[]): DailyPunchRecord[] {

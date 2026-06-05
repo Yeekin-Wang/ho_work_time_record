@@ -1,7 +1,7 @@
 import { preferences } from '@kit.ArkData';
 import { ExcludedRange } from '../model/ExcludedRange';
 import { DailyPunchRecord } from '../model/DailyPunchRecord';
-import { DEFAULT_TARGET_HOURS, DEFAULT_WORKDAY_START } from '../constants/IndexConstants';
+import { DEFAULT_TARGET_HOURS, DEFAULT_WORKDAY_START, THEME_MODE_DARK, THEME_MODE_LIGHT, THEME_MODE_SYSTEM } from '../constants/IndexConstants';
 import { TimeUtils } from './TimeUtils';
 
 export class PersistState {
@@ -14,6 +14,7 @@ export class PersistState {
   excludedRanges: ExcludedRange[] = [];
   records: DailyPunchRecord[] = [];
   darkModeEnabled: boolean = false;
+  themeMode: string = THEME_MODE_SYSTEM;
 }
 
 export class IndexPreferencesService {
@@ -93,8 +94,13 @@ export class IndexPreferencesService {
       state.records = this.deserializeRecords(recordsText);
     }
 
-    let darkModeText: string = this.pref.getSync(this.prefDarkMode, 'false') as string;
-    state.darkModeEnabled = darkModeText === 'true';
+    if (this.pref.hasSync(this.prefDarkMode)) {
+      let darkModeText: string = this.pref.getSync(this.prefDarkMode, 'false') as string;
+      state.darkModeEnabled = darkModeText === 'true';
+      state.themeMode = state.darkModeEnabled ? THEME_MODE_DARK : THEME_MODE_LIGHT;
+    } else {
+      state.themeMode = THEME_MODE_SYSTEM;
+    }
   }
 
   persistState(state: PersistState): void {
@@ -137,6 +143,7 @@ export class IndexPreferencesService {
     safeState.excludedRanges = this.copyValidRanges(state.excludedRanges);
     safeState.records = this.copyValidRecords(state.records);
     safeState.darkModeEnabled = state.darkModeEnabled;
+    safeState.themeMode = this.normalizeThemeMode(state.themeMode);
     return JSON.stringify(safeState);
   }
 
@@ -175,6 +182,17 @@ export class IndexPreferencesService {
         state.darkModeEnabled = parsed.darkModeEnabled;
       }
 
+      if (typeof parsed.themeMode === 'string') {
+        state.themeMode = this.normalizeThemeMode(parsed.themeMode);
+        if (state.themeMode === THEME_MODE_DARK) {
+          state.darkModeEnabled = true;
+        } else if (state.themeMode === THEME_MODE_LIGHT) {
+          state.darkModeEnabled = false;
+        }
+      } else if (typeof parsed.darkModeEnabled === 'boolean') {
+        state.themeMode = parsed.darkModeEnabled ? THEME_MODE_DARK : THEME_MODE_LIGHT;
+      }
+
       return true;
     } catch (_error) {
       return false;
@@ -192,6 +210,13 @@ export class IndexPreferencesService {
       return 12;
     }
     return Math.round(value * 10) / 10;
+  }
+
+  private normalizeThemeMode(value: string): string {
+    if (value === THEME_MODE_LIGHT || value === THEME_MODE_DARK || value === THEME_MODE_SYSTEM) {
+      return value;
+    }
+    return THEME_MODE_SYSTEM;
   }
 
   private copyValidRanges(ranges: ExcludedRange[]): ExcludedRange[] {

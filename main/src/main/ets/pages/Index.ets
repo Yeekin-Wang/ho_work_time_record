@@ -8,7 +8,8 @@ import { PunchCalculator } from '../service/PunchCalculator';
 import { IndexCalendarService } from '../service/IndexCalendarService';
 import { PersistState } from '../service/IndexPreferencesService';
 import { WorkTimeStateService } from '../service/WorkTimeStateService';
-import { DEFAULT_TARGET_HOURS, DEFAULT_WORKDAY_START, WEEKDAY_NAMES } from '../constants/IndexConstants';
+import { ThemeService } from '../service/ThemeService';
+import { DEFAULT_TARGET_HOURS, DEFAULT_WORKDAY_START, THEME_MODE_SYSTEM, WEEKDAY_NAMES } from '../constants/IndexConstants';
 import { MainHeader } from '../components/index/MainHeader';
 import { PunchCardSection } from '../components/index/PunchCardSection';
 import { SummaryCardsSection } from '../components/index/SummaryCardsSection';
@@ -31,6 +32,8 @@ struct Index {
   @State punchButtonGlow: number = 0;
   @State todayButtonScale: number = 1;
   @State darkModeEnabled: boolean = false;
+  @State themeMode: string = THEME_MODE_SYSTEM;
+  @StorageProp('currentColorMode') currentColorMode: number = 0;
   @State calendarWeekOffset: number = 0;
   @State monthContentKey: number = 0;
   @State weekContentKey: number = 0;
@@ -65,7 +68,7 @@ struct Index {
     .height('100%')
     .linearGradient({
       angle: 180,
-      colors: this.darkModeEnabled ? [['#1A1F2E', 0.0], ['#242B3D', 1.0]] : [['#F9FBFF', 0.0], ['#F2F5FB', 1.0]]
+      colors: this.isEffectiveDarkMode() ? [['#1A1F2E', 0.0], ['#242B3D', 1.0]] : [['#F9FBFF', 0.0], ['#F2F5FB', 1.0]]
     })
     .animation({ duration: 220, curve: Curve.EaseInOut })
     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
@@ -79,7 +82,7 @@ struct Index {
   buildMainPage() {
     Column() {
       MainHeader({
-        darkModeEnabled: this.darkModeEnabled,
+        darkModeEnabled: this.isEffectiveDarkMode(),
         selectedDateKey: this.selectedDateKey,
         onOpenSettings: (): void => {
           router.pushUrl({ url: 'pages/SettingsPage' }).catch((error: Error) => {
@@ -91,7 +94,7 @@ struct Index {
       Scroll() {
         Column({ space: 16 }) {
           CalendarCard({
-            darkModeEnabled: this.darkModeEnabled,
+            darkModeEnabled: this.isEffectiveDarkMode(),
             displayYear: this.displayYear,
             displayMonth: this.displayMonth,
             selectedDateKey: this.selectedDateKey,
@@ -114,7 +117,7 @@ struct Index {
           });
 
           PunchCardSection({
-            darkModeEnabled: this.darkModeEnabled,
+            darkModeEnabled: this.isEffectiveDarkMode(),
             selectedDateLabel: this.getSelectedDateLabel(),
             selectedWorkMinutes: this.getSelectedWorkMinutes(),
             startTimeText: this.getStartTimeText(),
@@ -131,7 +134,7 @@ struct Index {
           });
 
           SummaryCardsSection({
-            darkModeEnabled: this.darkModeEnabled,
+            darkModeEnabled: this.isEffectiveDarkMode(),
             summaryItems: this.getSummaryItems(),
             summaryRefreshKey: this.summaryRefreshKey,
             differenceLabel: this.getDifferenceLabel(),
@@ -157,14 +160,14 @@ struct Index {
       Column()
         .width('100%')
         .height('100%')
-        .backgroundColor(this.darkModeEnabled ? '#80000000' : '#660C1729')
+        .backgroundColor(this.isEffectiveDarkMode() ? '#80000000' : '#660C1729')
         .animation({ duration: 220, curve: Curve.EaseInOut })
         .onClick(() => {
           this.calendarExpanded = false;
         });
 
       ExpandedCalendarPanel({
-        darkModeEnabled: this.darkModeEnabled,
+        darkModeEnabled: this.isEffectiveDarkMode(),
         displayYear: this.displayYear,
         displayMonth: this.displayMonth,
         selectedDateKey: this.selectedDateKey,
@@ -211,6 +214,7 @@ struct Index {
 
   loadPersistedState(): void {
     this.applyPersistState(this.stateService.loadPersistedState(this.createPersistState()));
+    this.applyCurrentThemeMode();
     if (this.displayYear === 0 || this.displayMonth < 0) {
       this.syncDisplayMonthToSelectedDate();
     }
@@ -232,7 +236,8 @@ struct Index {
     state.workdayStartTime = this.workdayStartTime;
     state.excludedRanges = PunchCalculator.copyRanges(this.excludedRanges);
     state.records = WorkTimeStateService.copyRecords(this.records);
-    state.darkModeEnabled = this.darkModeEnabled;
+    state.darkModeEnabled = this.isEffectiveDarkMode();
+    state.themeMode = ThemeService.normalizeThemeMode(this.themeMode);
     return state;
   }
 
@@ -244,7 +249,20 @@ struct Index {
     this.workdayStartTime = state.workdayStartTime;
     this.excludedRanges = PunchCalculator.copyRanges(state.excludedRanges);
     this.records = WorkTimeStateService.copyRecords(state.records);
-    this.darkModeEnabled = state.darkModeEnabled;
+    this.themeMode = ThemeService.normalizeThemeMode(state.themeMode);
+    this.darkModeEnabled = this.isEffectiveDarkMode();
+  }
+
+  isEffectiveDarkMode(): boolean {
+    return ThemeService.isDarkMode(this.themeMode, this.currentColorMode);
+  }
+
+  applyCurrentThemeMode(): void {
+    try {
+      let hostContext: Context = this.getUIContext().getHostContext() as Context;
+      ThemeService.applyColorMode(hostContext, this.themeMode);
+    } catch (_error) {
+    }
   }
 
   syncDisplayMonthToSelectedDate(): void {

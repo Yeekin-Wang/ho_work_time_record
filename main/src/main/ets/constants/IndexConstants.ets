@@ -4,3 +4,7 @@ export const DEFAULT_TARGET_HOURS: number = 8;
 export const DEFAULT_WORKDAY_START: string = '09:00';
 export const DEFAULT_RANGE_START: string = '12:00';
 export const DEFAULT_RANGE_END: string = '13:00';
+
+export const THEME_MODE_LIGHT: string = 'light';
+export const THEME_MODE_DARK: string = 'dark';
+export const THEME_MODE_SYSTEM: string = 'system';

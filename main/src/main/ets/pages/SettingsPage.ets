@@ -7,8 +7,9 @@ import { PunchCalculator } from '../service/PunchCalculator';
 import { TimeUtils } from '../service/TimeUtils';
 import { IndexImportExportService, ImportRecordsResult } from '../service/IndexImportExportService';
 import { PersistState } from '../service/IndexPreferencesService';
+import { ThemeService } from '../service/ThemeService';
 import { WorkTimeStateService } from '../service/WorkTimeStateService';
-import { DEFAULT_RANGE_END, DEFAULT_RANGE_START, DEFAULT_TARGET_HOURS, DEFAULT_WORKDAY_START } from '../constants/IndexConstants';
+import { DEFAULT_RANGE_END, DEFAULT_RANGE_START, DEFAULT_TARGET_HOURS, DEFAULT_WORKDAY_START, THEME_MODE_SYSTEM } from '../constants/IndexConstants';
 import { SettingsHeader } from '../components/index/SettingsHeader';
 import { WorkdayStartCard } from '../components/index/WorkdayStartCard';
 import { ExcludedRangesCard } from '../components/index/ExcludedRangesCard';
@@ -30,6 +31,8 @@ struct SettingsPage {
   @State excludedRanges: ExcludedRange[] = [];
   @State records: DailyPunchRecord[] = [];
   @State darkModeEnabled: boolean = false;
+  @State themeMode: string = THEME_MODE_SYSTEM;
+  @StorageProp('currentColorMode') currentColorMode: number = 0;
   @State showRangeDialog: boolean = false;
   @State showRangeConflictDialog: boolean = false;
   @State rangeStartInput: string = DEFAULT_RANGE_START;
@@ -53,7 +56,7 @@ struct SettingsPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor(this.darkModeEnabled ? '#1A1F2E' : '#F9FBFF')
+    .backgroundColor(this.isEffectiveDarkMode() ? '#1A1F2E' : '#F9FBFF')
     .animation({ duration: 220, curve: Curve.EaseInOut })
     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
     .safeAreaPadding({
@@ -66,7 +69,7 @@ struct SettingsPage {
   buildSettingsContent() {
     Column({ space: 16 }) {
       SettingsHeader({
-        darkModeEnabled: this.darkModeEnabled,
+        darkModeEnabled: this.isEffectiveDarkMode(),
         onBack: (): void => {
           this.closeSettingsPage();
         }
@@ -75,14 +78,14 @@ struct SettingsPage {
       Scroll() {
         Column({ space: 16 }) {
           WorkdayStartCard({
-            darkModeEnabled: this.darkModeEnabled,
+            darkModeEnabled: this.isEffectiveDarkMode(),
             workdayStartTime: this.workdayStartTime,
             onOpenPicker: (): void => {
               this.openWorkdayStartTimePicker();
             }
           });
           ExcludedRangesCard({
-            darkModeEnabled: this.darkModeEnabled,
+            darkModeEnabled: this.isEffectiveDarkMode(),
             excludedRanges: this.excludedRanges,
             confirmDeleteIndex: this.confirmDeleteIndex,
             onAdd: (): void => {
@@ -110,7 +113,7 @@ struct SettingsPage {
             }
           });
           TargetHoursCard({
-            darkModeEnabled: this.darkModeEnabled,
+            darkModeEnabled: this.isEffectiveDarkMode(),
             targetAverageHours: this.targetAverageHours,
             onChange: (value: number): void => {
               this.targetAverageHours = Math.round(value * 10) / 10;
@@ -118,14 +121,14 @@ struct SettingsPage {
             }
           });
           DarkModeCard({
-            darkModeEnabled: this.darkModeEnabled,
-            onToggle: (isOn: boolean): void => {
-              this.darkModeEnabled = isOn;
-              this.persistState();
+            darkModeEnabled: this.isEffectiveDarkMode(),
+            themeMode: this.themeMode,
+            onChange: (themeMode: string): void => {
+              this.changeThemeMode(themeMode);
             }
           });
           DataManagementCard({
-            darkModeEnabled: this.darkModeEnabled,
+            darkModeEnabled: this.isEffectiveDarkMode(),
             onExport: (): void => {
               this.exportRecordsToCsv();
             },
@@ -162,7 +165,7 @@ struct SettingsPage {
   buildDialogs() {
     if (this.showRangeDialog) {
       RangeEditDialog({
-        darkModeEnabled: this.darkModeEnabled,
+        darkModeEnabled: this.isEffectiveDarkMode(),
         editRangeIndex: this.editRangeIndex,
         rangeStartInput: this.rangeStartInput,
         rangeEndInput: this.rangeEndInput,
@@ -184,7 +187,7 @@ struct SettingsPage {
 
     if (this.showRangeConflictDialog) {
       RangeConflictDialog({
-        darkModeEnabled: this.darkModeEnabled,
+        darkModeEnabled: this.isEffectiveDarkMode(),
         onClose: (): void => {
           this.showRangeConflictDialog = false;
         },
@@ -202,6 +205,7 @@ struct SettingsPage {
       let hostContext: Context = this.getUIContext().getHostContext() as Context;
       this.stateService.init(hostContext);
       this.applyPersistState(this.stateService.loadPersistedState(this.createPersistState()));
+      this.applyCurrentThemeMode();
     } catch (_error) {
     }
   }
@@ -224,7 +228,8 @@ struct SettingsPage {
     state.workdayStartTime = this.workdayStartTime;
     state.excludedRanges = PunchCalculator.copyRanges(this.excludedRanges);
     state.records = WorkTimeStateService.copyRecords(this.records);
-    state.darkModeEnabled = this.darkModeEnabled;
+    state.darkModeEnabled = this.isEffectiveDarkMode();
+    state.themeMode = ThemeService.normalizeThemeMode(this.themeMode);
     return state;
   }
 
@@ -236,7 +241,27 @@ struct SettingsPage {
     this.workdayStartTime = state.workdayStartTime;
     this.excludedRanges = PunchCalculator.copyRanges(state.excludedRanges);
     this.records = WorkTimeStateService.copyRecords(state.records);
-    this.darkModeEnabled = state.darkModeEnabled;
+    this.themeMode = ThemeService.normalizeThemeMode(state.themeMode);
+    this.darkModeEnabled = this.isEffectiveDarkMode();
+  }
+
+  isEffectiveDarkMode(): boolean {
+    return ThemeService.isDarkMode(this.themeMode, this.currentColorMode);
+  }
+
+  applyCurrentThemeMode(): void {
+    try {
+      let hostContext: Context = this.getUIContext().getHostContext() as Context;
+      ThemeService.applyColorMode(hostContext, this.themeMode);
+    } catch (_error) {
+    }
+  }
+
+  changeThemeMode(themeMode: string): void {
+    this.themeMode = ThemeService.normalizeThemeMode(themeMode);
+    this.darkModeEnabled = this.isEffectiveDarkMode();
+    this.applyCurrentThemeMode();
+    this.persistState();
   }
 
   resetDeleteConfirm(): void {
@@ -418,7 +443,7 @@ struct SettingsPage {
       buttons: [
         {
           text: '取消',
-          color: this.darkModeEnabled ? '#8892A4' : '#60708A'
+          color: this.isEffectiveDarkMode() ? '#8892A4' : '#60708A'
         },
         {
           text: '确认清空',

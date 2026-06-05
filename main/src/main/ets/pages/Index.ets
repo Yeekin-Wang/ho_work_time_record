@@ -50,7 +50,6 @@ struct Index {
   @State calendarWeekOffset: number = 0;
   @State monthContentKey: number = 0;
   @State weekContentKey: number = 0;
-  @State rangeDialogKey: number = 0;
   @State confirmDeleteIndex: number = -1;
   // 当前编辑的排除时段索引（-1 表示新增模式）
   @State editRangeIndex: number = -1;
@@ -139,13 +138,64 @@ struct Index {
   @Builder
   buildMainPage() {
     Column() {
-      this.buildMainHeader();
+      MainHeader({
+        darkModeEnabled: this.darkModeEnabled,
+        selectedDateKey: this.selectedDateKey,
+        onOpenSettings: (): void => {
+          this.showSettingsPage = true;
+        }
+      });
 
       Scroll() {
         Column({ space: 16 }) {
-          this.buildCalendarCard();
-          this.buildPunchCard();
-          this.buildSummaryCards();
+          CalendarCard({
+            darkModeEnabled: this.darkModeEnabled,
+            displayYear: this.displayYear,
+            displayMonth: this.displayMonth,
+            selectedDateKey: this.selectedDateKey,
+            todayButtonScale: this.todayButtonScale,
+            weekContentKey: this.weekContentKey,
+            weekSlots: this.getCurrentWeekSlots(),
+            onOpen: (): void => {
+              this.calendarExpanded = true;
+            },
+            onTodayTap: (): void => {
+              this.playTodayButtonAnimation();
+              this.jumpToToday();
+            },
+            onSwipe: (offsetX: number): void => {
+              this.handleCalendarSwipe(offsetX);
+            },
+            onSelectDate: (dateKey: string, collapseAfterSelect: boolean): void => {
+              this.selectCalendarDate(dateKey, collapseAfterSelect);
+            }
+          });
+
+          PunchCardSection({
+            darkModeEnabled: this.darkModeEnabled,
+            selectedDateLabel: this.getSelectedDateLabel(),
+            selectedWorkMinutes: this.getSelectedWorkMinutes(),
+            startTimeText: this.getStartTimeText(),
+            endTimeText: this.getEndTimeText(),
+            excludeSummaryText: this.getExcludeSummaryText(),
+            holiday: this.isHoliday(),
+            punchCardScale: this.punchCardScale,
+            punchButtonGlow: this.punchButtonGlow,
+            onPunch: (): void => {
+              this.handlePunchNow();
+            },
+            onEditPunch: (field: string): void => {
+              this.openTimePicker(field);
+            }
+          });
+
+          SummaryCardsSection({
+            darkModeEnabled: this.darkModeEnabled,
+            summaryItems: this.getSummaryItems(),
+            summaryRefreshKey: this.summaryRefreshKey,
+            differenceLabel: this.getDifferenceLabel(),
+            differenceColor: this.getDifferenceColor()
+          });
         }
         .padding({ left: 16, right: 16, top: 16, bottom: 28 })
         .width('100%');
@@ -158,17 +208,6 @@ struct Index {
     .width('100%')
     .height('100%')
     .padding({ left: 16, right: 16, top: 48 });
-  }
-
-  @Builder
-  buildMainHeader() {
-    MainHeader({
-      darkModeEnabled: this.darkModeEnabled,
-      selectedDateKey: this.selectedDateKey,
-      onOpenSettings: (): void => {
-        this.showSettingsPage = true;
-      }
-    });
   }
 
   @Builder
@@ -200,7 +239,6 @@ struct Index {
               this.rangeStartInput = DEFAULT_RANGE_START;
               this.rangeEndInput = DEFAULT_RANGE_END;
               this.editRangeIndex = -1;
-              this.rangeDialogKey++;
               this.showRangeDialog = true;
               this.confirmDeleteIndex = -1;
             },
@@ -215,7 +253,6 @@ struct Index {
               this.rangeStartInput = range.start;
               this.rangeEndInput = range.end;
               this.editRangeIndex = index;
-              this.rangeDialogKey++;
               this.showRangeDialog = true;
             },
             onResetDeleteConfirm: (): void => {
@@ -294,131 +331,6 @@ struct Index {
   }
 
   @Builder
-  buildSettingsHeader() {
-    SettingsHeader({
-      darkModeEnabled: this.darkModeEnabled,
-      onBack: (): void => {
-        this.showSettingsPage = false;
-        this.summaryRefreshKey++;
-        this.confirmDeleteIndex = -1;
-      }
-    });
-  }
-
-  @Builder
-  buildExcludedRangesCard() {
-    ExcludedRangesCard({
-      darkModeEnabled: this.darkModeEnabled,
-      excludedRanges: this.excludedRanges,
-      confirmDeleteIndex: this.confirmDeleteIndex,
-      onAdd: (): void => {
-        this.rangeStartInput = DEFAULT_RANGE_START;
-        this.rangeEndInput = DEFAULT_RANGE_END;
-        this.editRangeIndex = -1;
-        this.rangeDialogKey++;
-        this.showRangeDialog = true;
-        this.confirmDeleteIndex = -1;
-      },
-      onConfirmDelete: (index: number): void => {
-        this.removeRange(index);
-        this.confirmDeleteIndex = -1;
-      },
-      onRequestDelete: (index: number): void => {
-        this.confirmDeleteIndex = index;
-      },
-      onEdit: (index: number, range: ExcludedRange): void => {
-        this.rangeStartInput = range.start;
-        this.rangeEndInput = range.end;
-        this.editRangeIndex = index;
-        this.rangeDialogKey++;
-        this.showRangeDialog = true;
-      },
-      onResetDeleteConfirm: (): void => {
-        this.getUIContext().animateTo({ duration: 200, curve: Curve.EaseInOut }, () => {
-          this.confirmDeleteIndex = -1;
-        });
-      }
-    });
-  }
-
-  @Builder
-  buildTargetHoursCard() {
-    TargetHoursCard({
-      darkModeEnabled: this.darkModeEnabled,
-      targetAverageHours: this.targetAverageHours,
-      onChange: (value: number): void => {
-        this.targetAverageHours = Math.round(value * 10) / 10;
-        this.summaryRefreshKey++;
-        this.persistState();
-      }
-    });
-  }
-
-  @Builder
-  buildSettingsWorkdayStartCard() {
-    WorkdayStartCard({
-      darkModeEnabled: this.darkModeEnabled,
-      workdayStartTime: this.workdayStartTime,
-      onOpenPicker: (): void => {
-        this.openWorkdayStartTimePicker();
-      }
-    });
-  }
-
-  @Builder
-  buildDarkModeCard() {
-    DarkModeCard({
-      darkModeEnabled: this.darkModeEnabled,
-      onToggle: (isOn: boolean): void => {
-        this.darkModeEnabled = isOn;
-        this.persistState();
-      }
-    });
-  }
-
-  @Builder
-  buildDataManagementCard() {
-    DataManagementCard({
-      darkModeEnabled: this.darkModeEnabled,
-      onExport: (): void => {
-        this.exportRecordsToCsv();
-      },
-      onImport: (): void => {
-        this.importRecordsFromCsv();
-      },
-      onClear: (): void => {
-        this.confirmClearAllRecords();
-      }
-    });
-  }
-
-  @Builder
-  buildCalendarCard() {
-    CalendarCard({
-      darkModeEnabled: this.darkModeEnabled,
-      displayYear: this.displayYear,
-      displayMonth: this.displayMonth,
-      selectedDateKey: this.selectedDateKey,
-      todayButtonScale: this.todayButtonScale,
-      weekContentKey: this.weekContentKey,
-      weekSlots: this.getCurrentWeekSlots(),
-      onOpen: (): void => {
-        this.calendarExpanded = true;
-      },
-      onTodayTap: (): void => {
-        this.playTodayButtonAnimation();
-        this.jumpToToday();
-      },
-      onSwipe: (offsetX: number): void => {
-        this.handleCalendarSwipe(offsetX);
-      },
-      onSelectDate: (dateKey: string, collapseAfterSelect: boolean): void => {
-        this.selectCalendarDate(dateKey, collapseAfterSelect);
-      }
-    });
-  }
-
-  @Builder
   buildExpandedCalendarOverlay() {
     Stack({ alignContent: Alignment.Center }) {
       Column()
@@ -455,39 +367,6 @@ struct Index {
     .height('100%')
     .transition(TransitionEffect.OPACITY)
     .animation({ duration: 220, curve: Curve.EaseInOut });
-  }
-
-  @Builder
-  buildPunchCard() {
-    PunchCardSection({
-      darkModeEnabled: this.darkModeEnabled,
-      selectedDateLabel: this.getSelectedDateLabel(),
-      selectedDateKey: this.selectedDateKey,
-      selectedWorkMinutes: this.getSelectedWorkMinutes(),
-      startTimeText: this.getStartTimeText(),
-      endTimeText: this.getEndTimeText(),
-      excludeSummaryText: this.getExcludeSummaryText(),
-      holiday: this.isHoliday(),
-      punchCardScale: this.punchCardScale,
-      punchButtonGlow: this.punchButtonGlow,
-      onPunch: (): void => {
-        this.handlePunchNow();
-      },
-      onEditPunch: (field: string): void => {
-        this.openTimePicker(field);
-      }
-    });
-  }
-
-  @Builder
-  buildSummaryCards() {
-    SummaryCardsSection({
-      darkModeEnabled: this.darkModeEnabled,
-      summaryItems: this.getSummaryItems(),
-      summaryRefreshKey: this.summaryRefreshKey,
-      differenceLabel: this.getDifferenceLabel(),
-      differenceColor: this.getDifferenceColor()
-    });
   }
 
   // ========== 业务逻辑方法 ==========
@@ -564,18 +443,6 @@ struct Index {
     }
     this.displayYear = selectedDate.getFullYear();
     this.displayMonth = selectedDate.getMonth();
-  }
-
-  getCurrentMonthTitle(): string {
-    return this.displayYear.toString() + '年 ' + (this.displayMonth + 1).toString() + '月';
-  }
-
-  getSelectedDateDescription(): string {
-    let todayKey: string = TimeUtils.createDateKey(new Date());
-    if (this.selectedDateKey === todayKey) {
-      return '今天';
-    }
-    return TimeUtils.getDateLabelWithWeekday(this.selectedDateKey, WEEKDAY_NAMES);
   }
 
   jumpToToday(): void {
@@ -794,14 +661,6 @@ struct Index {
     );
   }
 
-  calculateWorkMinutes(punches: number[]): number {
-    return PunchCalculator.calculateWorkMinutes(punches, this.workdayStartTime, this.excludedRanges);
-  }
-
-  getOverlapMinutes(startOne: number, endOne: number, startTwo: number, endTwo: number): number {
-    return PunchCalculator.getOverlapMinutes(startOne, endOne, startTwo, endTwo);
-  }
-
   openTimePicker(field: string): void {
     let currentValue: string = field === 'start' ? this.getStartTimeText() : this.getEndTimeText();
     let defaultValue: string = currentValue === '--:--' ? (field === 'start' ? '09:00' : '18:00') : currentValue;
@@ -864,7 +723,6 @@ struct Index {
           } else {
             this.rangeEndInput = picked;
           }
-          this.rangeDialogKey++;
         }
       }),
       autoCancel: true,

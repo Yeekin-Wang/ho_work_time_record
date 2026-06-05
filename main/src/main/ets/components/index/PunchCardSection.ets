@@ -4,7 +4,6 @@ import { TimeUtils } from '../../service/TimeUtils';
 export struct PunchCardSection {
   @Prop darkModeEnabled: boolean = false;
   @Prop selectedDateLabel: string = '';
-  @Prop selectedDateKey: string = '';
   @Prop selectedWorkMinutes: number = 0;
   @Prop startTimeText: string = '--:--';
   @Prop endTimeText: string = '--:--';

@@ -15,53 +15,22 @@ export struct ExcludedRangesCard {
     Column({ space: 14 }) {
       Row() {
         Column({ space: 4 }) {
-          Text('不计入工时的时间段')
-            .fontSize(12)
-            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
           Text('排除时段')
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
             .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-        }
-
-        Button() {
-          Stack({ alignContent: Alignment.Center }) {
-            Text('+')
-              .fontSize(18)
-              .fontWeight(FontWeight.Regular)
-              .fontColor(this.darkModeEnabled ? '#8B9EF5' : '#2E67F8');
-          }
-          .width('100%')
-          .height('100%');
-        }
-        .width(44)
-        .height(44)
-        .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-        .borderRadius(22)
-        .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-        .onClick(() => {
-          this.onAdd();
-        });
-      }
-      .width('100%')
-      .justifyContent(FlexAlign.SpaceBetween)
-      .alignItems(VerticalAlign.Center);
-
-      if (this.excludedRanges.length === 0) {
-        Column({ space: 8 }) {
-          Text('暂未配置排除时段')
-            .fontSize(16)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-          Text('例如午休 12:00 - 13:00，不参与工时计算。')
+          Text('排除午休等不算工时的时段。')
             .fontSize(13)
             .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
         }
-        .width('100%')
-        .padding(16)
-        .borderRadius(18)
-        .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
-        .transition(TransitionEffect.OPACITY);
-      } else {
+        .alignItems(HorizontalAlign.Start);
+
+      }
+      .width('100%')
+      .justifyContent(FlexAlign.Start)
+      .alignItems(VerticalAlign.Center);
+
+      if (this.excludedRanges.length > 0) {
         Column({ space: 10 }) {
           ForEach(this.excludedRanges, (range: ExcludedRange, index: number) => {
             Row() {
@@ -128,8 +97,38 @@ export struct ExcludedRangesCard {
           }
         });
       }
+
+      Button() {
+        Stack({ alignContent: Alignment.Center }) {
+          Row() {
+            Text('+')
+              .fontSize(26)
+              .fontWeight(FontWeight.Medium)
+              .fontColor(this.darkModeEnabled ? '#8B9EF5' : '#2E67F8');
+          }
+          .width(34)
+          .height(34)
+          .borderRadius(17)
+          .border({
+            width: 1,
+            color: this.darkModeEnabled ? '#8B9EF5' : '#2E67F8',
+            style: BorderStyle.Dashed
+          })
+          .justifyContent(FlexAlign.Center)
+          .alignItems(VerticalAlign.Center);
+        }
+        .width('100%');
+      }
+      .width('100%')
+      .padding({ left: 14, right: 14, top: 14, bottom: 14 })
+      .borderRadius(18)
+      .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
+      .onClick(() => {
+        this.onAdd();
+      });
     }
     .width('100%')
+    .alignItems(HorizontalAlign.Start)
     .padding(16)
     .borderRadius(24)
     .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')

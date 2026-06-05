@@ -5,17 +5,13 @@ export struct DarkModeCard {
 
   build() {
     Column({ space: 14 }) {
-      Text('显示')
-        .fontSize(12)
-        .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-
       Row() {
         Column({ space: 4 }) {
           Text('深色模式')
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
             .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-          Text('开启后应用深色主题')
+          Text('切换为深色界面。')
             .fontSize(13)
             .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
         }
@@ -33,6 +29,7 @@ export struct DarkModeCard {
       .alignItems(VerticalAlign.Center);
     }
     .width('100%')
+    .alignItems(HorizontalAlign.Start)
     .padding(16)
     .borderRadius(24)
     .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')

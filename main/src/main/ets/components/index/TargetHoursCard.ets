@@ -8,11 +8,18 @@ export struct TargetHoursCard {
 
   build() {
     Column({ space: 14 }) {
-      Text('目标平均工时')
-        .fontSize(12)
-        .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+      Column({ space: 4 }) {
+        Text('每日目标')
+          .fontSize(22)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
+        Text('用于计算平均工时和目标差距。')
+          .fontSize(13)
+          .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+      }
+      .alignItems(HorizontalAlign.Start);
 
-      Text(TimeUtils.formatHoursValue(this.targetAverageHours) + ' / 天')
+      Text(TimeUtils.formatHoursValue(this.targetAverageHours) + ' 小时/天')
         .fontSize(24)
         .fontWeight(FontWeight.Bold)
         .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
@@ -32,11 +39,9 @@ export struct TargetHoursCard {
           this.onChange(value);
         });
 
-      Text('调整后会立即持久保存，下次打开应用仍然保留。')
-        .fontSize(13)
-        .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
     }
     .width('100%')
+    .alignItems(HorizontalAlign.Start)
     .padding(16)
     .borderRadius(24)
     .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')

@@ -6,17 +6,13 @@ export struct WorkdayStartCard {
 
   build() {
     Column({ space: 14 }) {
-      Text('工时开始时间')
-        .fontSize(12)
-        .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-
       Row() {
         Column({ space: 4 }) {
-          Text('开始计入工时')
+          Text('上班时间')
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
             .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-          Text('若上班打卡早于该时间，将按该时间开始计算。')
+          Text('早于此时间的打卡，将从这里开始计算工时。')
             .fontSize(13)
             .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
         }
@@ -40,6 +36,7 @@ export struct WorkdayStartCard {
       .alignItems(VerticalAlign.Center);
     }
     .width('100%')
+    .alignItems(HorizontalAlign.Start)
     .padding(16)
     .borderRadius(24)
     .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')

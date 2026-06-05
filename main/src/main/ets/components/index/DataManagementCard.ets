@@ -7,17 +7,13 @@ export struct DataManagementCard {
 
   build() {
     Column({ space: 14 }) {
-      Text('数据管理')
-        .fontSize(12)
-        .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-
       Row() {
         Column({ space: 4 }) {
-          Text('导出/导入数据')
+          Text('导入与导出')
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
             .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-          Text('导出打卡数据为CSV文件，或从CSV文件导入')
+          Text('将打卡记录保存为 CSV，或从 CSV 恢复记录。')
             .fontSize(13)
             .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
         }
@@ -57,11 +53,11 @@ export struct DataManagementCard {
 
       Row() {
         Column({ space: 4 }) {
-          Text('清空打卡数据')
+          Text('清空记录')
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
             .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-          Text('清除所有打卡记录，设置项配置不受影响')
+          Text('只删除打卡记录，不影响设置项。')
             .fontSize(13)
             .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
         }
@@ -85,6 +81,7 @@ export struct DataManagementCard {
       .alignItems(VerticalAlign.Center);
     }
     .width('100%')
+    .alignItems(HorizontalAlign.Start)
     .padding(16)
     .borderRadius(24)
     .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')

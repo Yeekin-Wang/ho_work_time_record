@@ -242,6 +242,7 @@ struct SettingsPage {
     this.workdayStartTime = state.workdayStartTime;
     this.excludedRanges = PunchCalculator.copyRanges(state.excludedRanges);
     this.records = this.copyRecords(state.records);
+    this.darkModeEnabled = state.darkModeEnabled;
   }
 
   copyRecords(records: DailyPunchRecord[]): DailyPunchRecord[] {

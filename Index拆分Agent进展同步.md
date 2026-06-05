@@ -36,16 +36,16 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 
 | 项目 | 当前状态 |
 |---|---|
-| 当前阶段 | 阶段 6：设置页页面化 |
-| 当前步骤 | 已完成阶段 6 设置页 router 页面化、主页面返回刷新与进展文档同步；按用户指令跳过编译和构建 |
-| 当前分支 | `codex/index-stage6-settings-page` |
-| 最近一次执行时间 | 2026-06-05 09:43:52 |
+| 当前阶段 | 阶段 7：ViewModel 收敛 |
+| 当前步骤 | 已完成阶段 7 首批低风险状态收敛与阶段提交：新增 `IndexViewModel.ets`，集中持久化状态映射、记录深拷贝和选中日期月份同步；`Index.ets` 与 `SettingsPage.ets` 接入 ViewModel；按用户指令跳过编译和构建 |
+| 当前分支 | `codex/index-stage7-viewmodel` |
+| 最近一次执行时间 | 2026-06-05 10:10:08 |
 | 最近一次执行人/Agent | OpenAI Codex Agent |
 | 最近一次编译结果 | 已跳过（用户明确要求跳过编译和构建部分） |
-| 最近一次回归结果 | 已完成代码级残留引用扫描与 `git diff --check`；未执行真机/手工页面交互回归 |
+| 最近一次回归结果 | 已完成 ViewModel 引用扫描、重复 `copyRecords` 清理确认与 `git diff --check`；未执行真机/手工页面交互回归 |
 | 是否存在阻塞 | 否 |
 | 阻塞摘要 | 无；构建验证按本次用户指令跳过 |
-| 下一步计划 | 阶段 6 待人工/真机回归与后续提交；如继续推进，再评估是否进入可选阶段 7 |
+| 下一步计划 | 阶段 7 待人工/真机回归；如继续推进，再基于回归结果评估是否迁移弹窗状态或新增 `SettingsViewModel.ets` |
 
 ---
 
@@ -61,7 +61,7 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 | 6 | 阶段 5 | 导入导出与持久化 service 化 | 必做 | `[x]` | 2026-06-05 09:22:49 | 已完成代码拆分、引用扫描与阶段提交；构建验证按用户指令跳过 |
 | 7 | 阶段 8 | 收尾优化 | 必做 | `[x]` | 2026-06-05 09:22:49 | 已清理残留 Builder、未使用状态/参数和已迁移纯函数；构建验证按用户指令跳过 |
 | 8 | 阶段 6 | 设置页页面化 | 可选 | `[x]` | 2026-06-05 09:43:52 | 已新增独立 `SettingsPage.ets`，主页面通过 `router.pushUrl` 进入设置页，返回后从 preferences 重载状态；构建验证按用户指令跳过 |
-| 9 | 阶段 7 | ViewModel 收敛 | 可选 | `[ ]` |  |  |
+| 9 | 阶段 7 | ViewModel 收敛 | 可选 | `[x]` | 2026-06-05 10:10:08 | 已完成首批持久化数据状态映射收敛与阶段提交：新增 `IndexViewModel.ets` 并接入 `Index.ets`、`SettingsPage.ets`；编译/构建按用户指令跳过 |
 
 ---
 
@@ -584,53 +584,53 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 
 | 判断项 | 状态 | 说明 |
 |---|---|---|
-| `Index.ets` 中剩余 `@State` 仍然很多 | `[ ]` |  |
-| 多个组件共享复杂状态 | `[ ]` |  |
-| 参数传递链路过长 | `[ ]` |  |
-| 后续仍有较大功能扩展 | `[ ]` |  |
-| service 和 UI 已基本拆分完成 | `[ ]` |  |
-| 是否决定进入本阶段 | 未决定 |  |
+| `Index.ets` 中剩余 `@State` 仍然很多 | `[x]` | 主页面仍保留日期、日历、记录、设置、动画等多组 `@State`，具备首批低风险收敛价值 |
+| 多个组件共享复杂状态 | `[x]` | `Index.ets` 与 `SettingsPage.ets` 共享持久化数据状态与 `PersistState` 映射逻辑 |
+| 参数传递链路过长 | `[x]` | 日历、汇总、打卡和设置组件均依赖页面层状态透传，首批先收敛持久化状态映射 |
+| 后续仍有较大功能扩展 | `[x]` | 设置页页面化后，后续设置模块和数据管理继续扩展时需要更清晰的状态边界 |
+| service 和 UI 已基本拆分完成 | `[x]` | 阶段 0-6 与阶段 8 已完成基础组件/service 拆分 |
+| 是否决定进入本阶段 | 已决定进入并完成首批低风险迁移 | 先迁移持久化数据状态映射，不迁移动画、高频交互和生命周期敏感状态 |
 
 ### 13.2 阶段状态
 
 | 项目 | 内容 |
 |---|---|
-| 阶段状态 | `[ ]` |
-| 目标分支 | `refactor/index-stage7-viewmodel` |
-| 开始时间 |  |
-| 完成时间 |  |
-| 编译结果 | 未执行 |
-| 回归结果 | 未执行 |
-| 是否完成可选增强 | 未确认 |
+| 阶段状态 | `[x]` |
+| 目标分支 | `codex/index-stage7-viewmodel` |
+| 开始时间 | 2026-06-05 10:10:08 |
+| 完成时间 | 2026-06-05 10:10:08 |
+| 编译结果 | 已跳过（用户明确要求跳过编译和构建部分） |
+| 回归结果 | 已完成代码级 ViewModel 引用扫描与 `git diff --check`；未执行真机/手工页面交互回归 |
+| 是否完成可选增强 | 是；首批低风险迁移已完成，后续如有必要再扩展 |
 
 ### 13.3 步骤进度
 
 | 步骤 | 内容 | 状态 | 执行记录 |
 |---|---|---|---|
-| Step 1 | 梳理页面展示状态 | `[ ]` |  |
-| Step 2 | 梳理日历状态 | `[ ]` |  |
-| Step 3 | 梳理设置状态 | `[ ]` |  |
-| Step 4 | 梳理弹窗状态 | `[ ]` |  |
-| Step 5 | 梳理导入导出状态 | `[ ]` |  |
-| Step 6 | 梳理动画状态 | `[ ]` |  |
-| Step 7 | 确定首批低风险迁移状态 | `[ ]` |  |
-| Step 8 | 新建 `IndexViewModel.ets` | `[ ]` |  |
-| Step 9 | 逐组迁移页面状态 | `[ ]` |  |
-| Step 10 | 每迁移一组执行局部验证 | `[ ]` |  |
-| Step 11 | 评估是否需要 `SettingsViewModel.ets` | `[ ]` |  |
+| Step 1 | 梳理页面展示状态 | `[x]` | 已确认主页面展示状态仍由页面 `@State` 承接，本轮不迁移渲染响应入口 |
+| Step 2 | 梳理日历状态 | `[x]` | 已确认日历展开、月份、周偏移和刷新 key 与交互/动画耦合，本轮只迁移选中日期到月份同步辅助逻辑 |
+| Step 3 | 梳理设置状态 | `[x]` | 已确认设置页与主页面共享持久化状态：目标工时、上班时间、排除时段、记录、深色模式等 |
+| Step 4 | 梳理弹窗状态 | `[x]` | 已确认设置页弹窗状态仍属于局部高频 UI 状态，本轮暂不迁移 |
+| Step 5 | 梳理导入导出状态 | `[x]` | 已确认导入导出入口在 `SettingsPage.ets`，数据记录状态纳入首批持久化数据映射收敛 |
+| Step 6 | 梳理动画状态 | `[x]` | 已确认 punch/today 动画状态保持页面 `@State`，避免影响动画响应链 |
+| Step 7 | 确定首批低风险迁移状态 | `[x]` | 首批迁移范围确定为持久化数据状态映射、记录深拷贝和选中日期月份同步 |
+| Step 8 | 新建 `IndexViewModel.ets` | `[x]` | 已新增 `main/src/main/ets/viewmodel/IndexViewModel.ets` |
+| Step 9 | 逐组迁移页面状态 | `[x]` | 已将 `Index.ets` 与 `SettingsPage.ets` 的 `PersistState` 创建/应用逻辑接入 `IndexViewModel`；页面暂保留 `@State` 字段 |
+| Step 10 | 每迁移一组执行局部验证 | `[x]` | 已执行 `rg` 引用扫描与 `git diff --check`；编译/构建按用户指令跳过 |
+| Step 11 | 评估是否需要 `SettingsViewModel.ets` | `[x]` | 暂不新增；设置页弹窗和导入导出反馈仍局部清晰，后续如继续扩展再评估 |
 | Step 12 | 如有必要，新增并接入 `SettingsViewModel.ets` | `[~]` | 默认按必要性决定 |
-| Step 13 | 执行状态联动回归 | `[ ]` |  |
-| Step 14 | 执行阶段编译验证 | `[ ]` |  |
-| Step 15 | 提交阶段代码 | `[ ]` |  |
+| Step 13 | 执行状态联动回归 | `[~]` | 未执行真机/手工页面交互回归；已完成代码级引用扫描 |
+| Step 14 | 执行阶段编译验证 | `[~]` | 按用户明确要求跳过编译和构建 |
+| Step 15 | 提交阶段代码 | `[x]` | 本轮提交阶段 7 ViewModel 收敛分支 |
 
 ### 13.4 文件变更记录
 
 | 类型 | 文件 | 说明 |
 |---|---|---|
-| 新增 | `main/src/main/ets/viewmodel/IndexViewModel.ets` | 可选 |
+| 新增 | `main/src/main/ets/viewmodel/IndexViewModel.ets` | 集中持久化数据状态、`PersistState` 映射、记录深拷贝和选中日期月份同步 |
 | 新增 | `main/src/main/ets/viewmodel/SettingsViewModel.ets` | 可选 |
-| 修改 | `main/src/main/ets/pages/Index.ets` |  |
-| 修改 | `main/src/main/ets/pages/SettingsPage.ets` | 如果阶段 6 已执行 |
+| 修改 | `main/src/main/ets/pages/Index.ets` | 接入 `IndexViewModel`，通过 `updateViewModelState()` / `applyViewModelState()` 收敛持久化状态映射，保留页面 `@State` 响应入口 |
+| 修改 | `main/src/main/ets/pages/SettingsPage.ets` | 接入 `IndexViewModel`，复用持久化状态映射与记录深拷贝逻辑 |
 | 修改 | `main/src/main/ets/components/index/*.ets` | 如涉及参数调整 |
 
 ---
@@ -660,6 +660,22 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 ```
 
 ### 历史执行记录
+
+### 2026-06-05 10:10 执行记录
+
+- 执行阶段：阶段 7：ViewModel 收敛
+- 执行步骤：Step 1 - Step 15（Step 13 真机/手工回归未执行，Step 14 编译/构建按用户指令跳过）
+- 执行前状态：阶段 6 已完成，当前从 `codex/index-stage6-settings-page` 新建并切换到 `codex/index-stage7-viewmodel`
+- 本次完成内容：新增 `IndexViewModel.ets`，集中持久化数据状态、`PersistState` 创建/应用、记录深拷贝和选中日期同步显示月份逻辑；`Index.ets` 与 `SettingsPage.ets` 接入 ViewModel，通过 `updateViewModelState()` / `applyViewModelState()` 复用持久化状态映射；页面层继续保留现有 `@State` 字段，避免一次性迁移动画、高频交互和生命周期敏感状态；评估后暂不新增 `SettingsViewModel.ets`
+- 新增文件：`main/src/main/ets/viewmodel/IndexViewModel.ets`
+- 修改文件：`main/src/main/ets/pages/Index.ets`、`main/src/main/ets/pages/SettingsPage.ets`、`Index拆分Agent进展同步.md`
+- 删除文件：无
+- 编译结果：已跳过（用户明确要求跳过编译和构建部分）
+- 回归结果：已完成 `rg` ViewModel/重复 `copyRecords` 引用扫描与 `git diff --check`；未执行真机/手工页面交互回归
+- 遇到问题：`git diff --check` 提示工作区文件下次触碰时会按 CRLF 处理，未发现空白错误
+- 处理方式：记录为 Git 换行提示，不做额外格式化 churn
+- 是否存在阻塞：否
+- 下一步计划：阶段 7 待人工/真机回归；如后续继续扩展，再基于回归结果评估是否迁移弹窗状态或新增 `SettingsViewModel.ets`
 
 ### 2026-06-05 09:43 执行记录
 
@@ -742,6 +758,9 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 | 2026-06-05 09:43 | 阶段 6：设置页页面化 | `rg` 残留引用扫描 | 通过 | `Index.ets` 未发现 `showSettingsPage`、`buildSettingsPage`、设置页排除时段弹窗与导入导出方法残留 | 已完成 |
 | 2026-06-05 09:43 | 阶段 6：设置页页面化 | `git diff --check` | 通过 | 无空白错误；仅 Git 提示工作区文件下次触碰时会按 CRLF 处理 | 已完成 |
 | 2026-06-05 09:43 | 阶段 6：设置页页面化 | 编译/构建 | 已跳过 | 用户明确要求跳过编译和构建部分 | 已记录 |
+| 2026-06-05 10:10 | 阶段 7：ViewModel 收敛 | `rg` ViewModel/重复拷贝引用扫描 | 通过 | `Index.ets` 与 `SettingsPage.ets` 已接入 `IndexViewModel`；页面内重复 `copyRecords` 实现已移除 | 已完成 |
+| 2026-06-05 10:10 | 阶段 7：ViewModel 收敛 | `git diff --check` | 通过 | 无空白错误；仅 Git 提示工作区文件下次触碰时会按 CRLF 处理 | 已完成 |
+| 2026-06-05 10:10 | 阶段 7：ViewModel 收敛 | 编译/构建 | 已跳过 | 用户明确要求跳过编译和构建部分 | 已记录 |
 |  |  |  |  |  |  |
 
 ---
@@ -761,6 +780,7 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 |---|---|---|---|---|---|
 | 2026-06-05 09:22 | 阶段 8：收尾优化 | `codex/index-stage8-cleanup` | 本轮提交 | `refactor(index): cleanup split structure` | 已完成代码级扫描；编译/构建按用户指令跳过 |
 | 2026-06-05 09:43 | 阶段 6：设置页页面化 | `codex/index-stage6-settings-page` | 已提交 | `refactor(index): extract settings page` | 已完成代码级扫描；编译/构建按用户指令跳过 |
+| 2026-06-05 10:10 | 阶段 7：ViewModel 收敛 | `codex/index-stage7-viewmodel` | 本轮提交 | `refactor(index): extract index view model` | 已完成 ViewModel 引用扫描与 `git diff --check`；编译/构建按用户指令跳过 |
 |  |  |  |  |  |  |
 
 ---

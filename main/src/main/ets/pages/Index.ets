@@ -8,6 +8,7 @@ import { PunchCalculator } from '../service/PunchCalculator';
 import { IndexCalendarService } from '../service/IndexCalendarService';
 import { IndexPreferencesService, PersistState } from '../service/IndexPreferencesService';
 import { DEFAULT_TARGET_HOURS, DEFAULT_WORKDAY_START, HOLIDAYS_2026, WEEKDAY_NAMES } from '../constants/IndexConstants';
+import { IndexViewModel } from '../viewmodel/IndexViewModel';
 import { MainHeader } from '../components/index/MainHeader';
 import { PunchCardSection } from '../components/index/PunchCardSection';
 import { SummaryCardsSection } from '../components/index/SummaryCardsSection';
@@ -40,6 +41,7 @@ struct Index {
   private timePickerController: CustomDialogController | null = null;
   private hasInitialized: boolean = false;
 
+  private readonly viewModel: IndexViewModel = new IndexViewModel();
   private readonly preferencesService: IndexPreferencesService = new IndexPreferencesService();
 
   aboutToAppear(): void {
@@ -193,10 +195,8 @@ struct Index {
   // ========== 业务逻辑方法 ==========
 
   initializeData(): void {
-    this.selectedDateKey = TimeUtils.createDateKey(new Date());
-    this.syncDisplayMonthToSelectedDate();
-    this.workdayStartTime = DEFAULT_WORKDAY_START;
-    this.excludedRanges = [];
+    this.viewModel.resetToToday();
+    this.applyViewModelState();
 
     try {
       let hostContext: Context = this.getUIContext().getHostContext() as Context;
@@ -213,9 +213,14 @@ struct Index {
   }
 
   loadPersistedState(): void {
-    let state: PersistState = this.createPersistState();
+    this.updateViewModelState();
+    let state: PersistState = this.viewModel.createPersistState();
     this.preferencesService.loadState(state);
-    this.applyPersistState(state);
+    this.viewModel.applyPersistState(state);
+    this.applyViewModelState();
+    if (this.displayYear === 0 || this.displayMonth < 0) {
+      this.syncDisplayMonthToSelectedDate();
+    }
     this.weekContentKey++;
     this.monthContentKey++;
     this.summaryRefreshKey++;
@@ -226,52 +231,45 @@ struct Index {
   }
 
   createPersistState(): PersistState {
-    let state: PersistState = new PersistState();
-    state.selectedDateKey = this.selectedDateKey;
-    state.displayYear = this.displayYear;
-    state.displayMonth = this.displayMonth;
-    state.targetAverageHours = this.targetAverageHours;
-    state.workdayStartTime = this.workdayStartTime;
-    state.excludedRanges = PunchCalculator.copyRanges(this.excludedRanges);
-    state.records = this.copyRecords(this.records);
-    state.darkModeEnabled = this.darkModeEnabled;
-    return state;
+    this.updateViewModelState();
+    return this.viewModel.createPersistState();
   }
 
   applyPersistState(state: PersistState): void {
-    this.selectedDateKey = state.selectedDateKey;
-    this.displayYear = state.displayYear;
-    this.displayMonth = state.displayMonth;
-    this.targetAverageHours = state.targetAverageHours;
-    this.workdayStartTime = state.workdayStartTime;
-    this.excludedRanges = PunchCalculator.copyRanges(state.excludedRanges);
-    this.records = this.copyRecords(state.records);
-    this.darkModeEnabled = state.darkModeEnabled;
+    this.viewModel.applyPersistState(state);
+    this.applyViewModelState();
     if (this.displayYear === 0 || this.displayMonth < 0) {
       this.syncDisplayMonthToSelectedDate();
     }
   }
 
-  copyRecords(records: DailyPunchRecord[]): DailyPunchRecord[] {
-    let result: DailyPunchRecord[] = [];
-    let index: number = 0;
-    while (index < records.length) {
-      result.push(new DailyPunchRecord(records[index].dateKey, PunchCalculator.copyPunches(records[index].punches)));
-      index += 1;
-    }
-    return result;
+  updateViewModelState(): void {
+    this.viewModel.selectedDateKey = this.selectedDateKey;
+    this.viewModel.displayYear = this.displayYear;
+    this.viewModel.displayMonth = this.displayMonth;
+    this.viewModel.targetAverageHours = this.targetAverageHours;
+    this.viewModel.workdayStartTime = this.workdayStartTime;
+    this.viewModel.excludedRanges = PunchCalculator.copyRanges(this.excludedRanges);
+    this.viewModel.records = IndexViewModel.copyRecords(this.records);
+    this.viewModel.darkModeEnabled = this.darkModeEnabled;
+  }
+
+  applyViewModelState(): void {
+    this.selectedDateKey = this.viewModel.selectedDateKey;
+    this.displayYear = this.viewModel.displayYear;
+    this.displayMonth = this.viewModel.displayMonth;
+    this.targetAverageHours = this.viewModel.targetAverageHours;
+    this.workdayStartTime = this.viewModel.workdayStartTime;
+    this.excludedRanges = PunchCalculator.copyRanges(this.viewModel.excludedRanges);
+    this.records = IndexViewModel.copyRecords(this.viewModel.records);
+    this.darkModeEnabled = this.viewModel.darkModeEnabled;
   }
 
   syncDisplayMonthToSelectedDate(): void {
-    let selectedDate: Date | null = TimeUtils.parseDateKey(this.selectedDateKey);
-    if (selectedDate === null) {
-      let today: Date = new Date();
-      this.displayYear = today.getFullYear();
-      this.displayMonth = today.getMonth();
-      return;
-    }
-    this.displayYear = selectedDate.getFullYear();
-    this.displayMonth = selectedDate.getMonth();
+    this.updateViewModelState();
+    this.viewModel.syncDisplayMonthToSelectedDate();
+    this.displayYear = this.viewModel.displayYear;
+    this.displayMonth = this.viewModel.displayMonth;
   }
 
   jumpToToday(): void {

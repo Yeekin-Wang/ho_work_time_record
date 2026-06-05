@@ -1,26 +1,21 @@
 import { preferences } from '@kit.ArkData';
 import { ExcludedRange } from '../model/ExcludedRange';
 import { DailyPunchRecord } from '../model/DailyPunchRecord';
+import { DEFAULT_TARGET_HOURS, DEFAULT_WORKDAY_START } from '../constants/IndexConstants';
 import { TimeUtils } from './TimeUtils';
 
-/**
- * 持久化状态数据对象
- */
 export class PersistState {
   selectedDateKey: string = '';
   displayYear: number = 0;
   displayMonth: number = 0;
-  targetAverageHours: number = 8;
-  workdayStartTime: string = '09:00';
+  targetAverageHours: number = DEFAULT_TARGET_HOURS;
+  workdayStartTime: string = DEFAULT_WORKDAY_START;
   excludedRanges: ExcludedRange[] = [];
   records: DailyPunchRecord[] = [];
   darkModeEnabled: boolean = false;
 }
 
-/**
- * 数据持久化服务
- */
-export class StorageService {
+export class IndexPreferencesService {
   private pref: preferences.Preferences | null = null;
   private readonly prefName: string = 'working_time_record';
   private readonly prefSelectedDateKey: string = 'selected_date_key';
@@ -29,6 +24,7 @@ export class StorageService {
   private readonly prefWorkdayStartTime: string = 'workday_start_time';
   private readonly prefExcludedRanges: string = 'excluded_ranges';
   private readonly prefRecords: string = 'records';
+  private readonly prefDarkMode: string = 'dark_mode';
 
   init(context: Context): void {
     try {
@@ -80,7 +76,7 @@ export class StorageService {
       state.records = this.deserializeRecords(recordsText);
     }
 
-    let darkModeText: string = this.pref.getSync('dark_mode', 'false') as string;
+    let darkModeText: string = this.pref.getSync(this.prefDarkMode, 'false') as string;
     state.darkModeEnabled = darkModeText === 'true';
   }
 
@@ -96,23 +92,21 @@ export class StorageService {
       this.pref.putSync(this.prefWorkdayStartTime, state.workdayStartTime);
       this.pref.putSync(this.prefExcludedRanges, this.serializeRanges(state.excludedRanges));
       this.pref.putSync(this.prefRecords, this.serializeRecords(state.records));
-      this.pref.putSync('dark_mode', state.darkModeEnabled.toString());
+      this.pref.putSync(this.prefDarkMode, state.darkModeEnabled.toString());
       this.pref.flush();
     } catch (_error) {
     }
   }
 
-  /**
-   * 清空所有打卡记录（保留其他配置）
-   */
-  clearAllRecords(state: PersistState): void {
-    state.records = [];
-    if (this.pref !== null) {
-      try {
-        this.pref.putSync(this.prefRecords, '');
-        this.pref.flush();
-      } catch (_error) {
-      }
+  clearAllRecords(): void {
+    if (this.pref === null) {
+      return;
+    }
+
+    try {
+      this.pref.putSync(this.prefRecords, '');
+      this.pref.flush();
+    } catch (_error) {
     }
   }
 
@@ -133,7 +127,7 @@ export class StorageService {
     state.displayMonth = month - 1;
   }
 
-  serializeRanges(ranges: ExcludedRange[]): string {
+  private serializeRanges(ranges: ExcludedRange[]): string {
     let result: string = '';
     let index: number = 0;
     while (index < ranges.length) {
@@ -147,7 +141,7 @@ export class StorageService {
     return result;
   }
 
-  deserializeRanges(content: string): ExcludedRange[] {
+  private deserializeRanges(content: string): ExcludedRange[] {
     let result: ExcludedRange[] = [];
     let items: string[] = content.split('|');
     let index: number = 0;
@@ -171,7 +165,7 @@ export class StorageService {
     return result;
   }
 
-  serializeRecords(records: DailyPunchRecord[]): string {
+  private serializeRecords(records: DailyPunchRecord[]): string {
     let result: string = '';
     let index: number = 0;
     while (index < records.length) {
@@ -185,7 +179,7 @@ export class StorageService {
     return result;
   }
 
-  deserializeRecords(content: string): DailyPunchRecord[] {
+  private deserializeRecords(content: string): DailyPunchRecord[] {
     let result: DailyPunchRecord[] = [];
     let items: string[] = content.split('|');
     let index: number = 0;

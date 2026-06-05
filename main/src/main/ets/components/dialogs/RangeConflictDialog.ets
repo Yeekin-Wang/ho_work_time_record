@@ -1,3 +1,4 @@
+﻿import { ThemeService } from '../../service/ThemeService';
 @Component
 export struct RangeConflictDialog {
   @Prop darkModeEnabled: boolean = false;
@@ -9,31 +10,31 @@ export struct RangeConflictDialog {
       Column()
         .width('100%')
         .height('100%')
-        .backgroundColor(this.darkModeEnabled ? '#80000000' : '#660C1729')
+        .backgroundColor(ThemeService.getColor('scrim', this.darkModeEnabled))
         .animation({ duration: 220, curve: Curve.EaseInOut })
         .onClick(() => {
           this.onClose();
         });
 
       Column({ space: 16 }) {
-        Text('时段冲突')
+        Text($r('app.string.dialog_range_conflict_title'))
           .fontSize(22)
           .fontWeight(FontWeight.Bold)
-          .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
+          .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
 
-        Text('当前排除时段与已配置的排除时段存在冲突，请调整时间后再试。')
+        Text($r('app.string.dialog_range_conflict_message'))
           .fontSize(14)
-          .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A')
+          .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled))
           .lineHeight(22)
           .textAlign(TextAlign.Center);
 
-        Button('知道了')
+        Button($r('app.string.button_got_it'))
           .width('100%')
           .height(48)
           .fontSize(16)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#FFFFFF')
-          .backgroundColor('#2E67F8')
+          .fontColor(ThemeService.getColor('text_inverse', this.darkModeEnabled))
+          .backgroundColor(ThemeService.getColor('brand', this.darkModeEnabled))
           .borderRadius(20)
           .onClick(() => {
             this.onConfirm();
@@ -41,9 +42,9 @@ export struct RangeConflictDialog {
       }
       .width('80%')
       .padding(24)
-      .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
+      .backgroundColor(ThemeService.getColor('card_bg', this.darkModeEnabled))
       .borderRadius(28)
-      .shadow({ radius: 18, color: this.darkModeEnabled ? '#0000004D' : '#30223C5C', offsetX: 0, offsetY: 10 })
+      .shadow({ radius: 18, color: ThemeService.getColor('shadow_modal', this.darkModeEnabled), offsetX: 0, offsetY: 10 })
       .transition(TransitionEffect.scale({ x: 0.85, y: 0.85 }).combine(TransitionEffect.OPACITY).animation({ duration: 250, curve: Curve.EaseInOut }));
     }
     .width('100%')

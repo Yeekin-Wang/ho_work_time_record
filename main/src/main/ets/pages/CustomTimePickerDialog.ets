@@ -1,3 +1,4 @@
+﻿import { ThemeService } from '../service/ThemeService';
 /**
  * 自定义时间选择弹窗 - 使用 CustomDialog + TimePicker
  * 替代系统 showTimePickerDialog，避免顶部固定显示 "2024年1月1日"
@@ -13,7 +14,8 @@ export struct CustomTimePickerDialog {
   // 是否启用24小时制
   private useMilitaryTime: boolean = true;
   // 弹窗标题
-  private title: string = '选择时间';
+  private darkModeEnabled: boolean = false;
+  private title: ResourceStr = $r('app.string.dialog_time_picker_default_title');
   // 确认回调
   onConfirm?: (hour: number, minute: number) => void;
 
@@ -27,7 +29,7 @@ export struct CustomTimePickerDialog {
       Text(this.title)
         .fontSize(20)
         .fontWeight(FontWeight.Bold)
-        .fontColor('#132033')
+        .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled))
         .margin({ top: 8 });
 
       // 时间选择器（不含顶部日期）
@@ -38,15 +40,15 @@ export struct CustomTimePickerDialog {
         .width('100%')
         .height(220)
         .disappearTextStyle({
-          color: '#99182431',
+          color: ThemeService.getColor('picker_text_faded', this.darkModeEnabled),
           font: { size: '16fp', weight: FontWeight.Regular }
         })
         .textStyle({
-          color: '#66182431',
+          color: ThemeService.getColor('picker_text', this.darkModeEnabled),
           font: { size: '18fp', weight: FontWeight.Regular }
         })
         .selectedTextStyle({
-          color: '#007DFF',
+          color: ThemeService.getColor('picker_selected_text', this.darkModeEnabled),
           font: { size: '24fp', weight: FontWeight.Medium }
         })
         .onChange((value: TimePickerResult) => {
@@ -59,25 +61,25 @@ export struct CustomTimePickerDialog {
       // 按钮组
       Row({ space: 12 }) {
         // 取消按钮
-        Button('取消')
+        Button($r('app.string.button_cancel'))
           .layoutWeight(1)
           .height(44)
           .fontSize(16)
-          .fontColor('#132033')
-          .backgroundColor('#F6F8FC')
+          .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled))
+          .backgroundColor(ThemeService.getColor('surface_bg', this.darkModeEnabled))
           .borderRadius(20)
           .onClick(() => {
             this.controller.close();
           });
 
         // 确定按钮
-        Button('确定')
+        Button($r('app.string.button_confirm'))
           .layoutWeight(1)
           .height(44)
           .fontSize(16)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#FFFFFF')
-          .backgroundColor('#2E67F8')
+          .fontColor(ThemeService.getColor('text_inverse', this.darkModeEnabled))
+          .backgroundColor(ThemeService.getColor('brand', this.darkModeEnabled))
           .borderRadius(20)
           .onClick(() => {
             this.onConfirm?.(this.selectedHour, this.selectedMinute);
@@ -89,7 +91,7 @@ export struct CustomTimePickerDialog {
     }
     .width('100%')
     .padding(24)
-    .backgroundColor('#FFFFFF')
+    .backgroundColor(ThemeService.getColor('card_bg', this.darkModeEnabled))
     .borderRadius(28);
   }
 }

@@ -1,3 +1,4 @@
+﻿import { ThemeService } from '../../service/ThemeService';
 @Component
 export struct DataManagementCard {
   @Prop darkModeEnabled: boolean = false;
@@ -9,13 +10,13 @@ export struct DataManagementCard {
     Column({ space: 14 }) {
       Row() {
         Column({ space: 4 }) {
-          Text('导入与导出')
+          Text($r('app.string.card_data_title'))
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-          Text('将打卡记录保存为 CSV，或从 CSV 恢复记录。')
+            .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
+          Text($r('app.string.card_data_desc'))
             .fontSize(13)
-            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+            .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
         }
         .layoutWeight(1)
         .alignItems(HorizontalAlign.Start);
@@ -25,25 +26,25 @@ export struct DataManagementCard {
       .alignItems(VerticalAlign.Center);
 
       Row({ space: 12 }) {
-        Button('导出数据')
+        Button($r('app.string.button_export'))
           .layoutWeight(1)
           .height(40)
           .fontSize(14)
           .fontWeight(FontWeight.Medium)
-          .fontColor('#FFFFFF')
-          .backgroundColor('#2E67F8')
+          .fontColor(ThemeService.getColor('text_inverse', this.darkModeEnabled))
+          .backgroundColor(ThemeService.getColor('brand', this.darkModeEnabled))
           .borderRadius(20)
           .onClick(() => {
             this.onExport();
           });
 
-        Button('导入数据')
+        Button($r('app.string.button_import'))
           .layoutWeight(1)
           .height(40)
           .fontSize(14)
           .fontWeight(FontWeight.Medium)
-          .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
-          .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
+          .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled))
+          .backgroundColor(ThemeService.getColor('surface_bg', this.darkModeEnabled))
           .borderRadius(20)
           .onClick(() => {
             this.onImport();
@@ -53,23 +54,23 @@ export struct DataManagementCard {
 
       Row() {
         Column({ space: 4 }) {
-          Text('清空记录')
+          Text($r('app.string.card_clear_records_title'))
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-          Text('只删除打卡记录，不影响设置项。')
+            .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
+          Text($r('app.string.card_clear_records_desc'))
             .fontSize(13)
-            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+            .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
         }
         .layoutWeight(1)
         .alignItems(HorizontalAlign.Start);
 
-        Button('清空')
+        Button($r('app.string.button_clear'))
           .height(36)
           .fontSize(14)
           .fontWeight(FontWeight.Medium)
-          .fontColor('#FFFFFF')
-          .backgroundColor('#D85353')
+          .fontColor(ThemeService.getColor('text_inverse', this.darkModeEnabled))
+          .backgroundColor(ThemeService.getColor('danger', this.darkModeEnabled))
           .borderRadius(18)
           .padding({ left: 16, right: 16 })
           .onClick(() => {
@@ -84,9 +85,9 @@ export struct DataManagementCard {
     .alignItems(HorizontalAlign.Start)
     .padding(16)
     .borderRadius(24)
-    .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-    .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-    .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
+    .backgroundColor(ThemeService.getColor('card_bg', this.darkModeEnabled))
+    .border({ width: 1, color: ThemeService.getColor('card_border', this.darkModeEnabled) })
+    .shadow({ radius: 14, color: ThemeService.getColor('shadow_card', this.darkModeEnabled), offsetX: 0, offsetY: 4 })
     .animation({ duration: 220, curve: Curve.EaseInOut });
   }
 }

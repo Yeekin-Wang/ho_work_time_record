@@ -2,23 +2,37 @@ import { DailyPunchRecord } from '../model/DailyPunchRecord';
 import { PunchCalculator } from '../service/PunchCalculator';
 import { TimeUtils } from '../service/TimeUtils';
 
+export class CsvTextResources {
+  fileNamePrefix: string = '牛马工时簿_打卡记录_';
+  templateFileName: string = '导入模板.csv';
+  zipSuffixChoice: string = 'ZIP 文件|.zip';
+  header: string = '日期,上班打卡时间,下班打卡时间';
+  instructionTitle: string = '# 说明：';
+  instructionDate: string = '# 1. 日期格式为 YYYY-MM-DD，例如 2026-06-01';
+  instructionTime: string = '# 2. 打卡时间格式为 HH:mm，例如 09:00';
+  instructionSameDay: string = '# 3. 同一日期请填写在同一行，上班时间和下班时间分列填写';
+  instructionSinglePunch: string = '# 4. 如果某天只有一次打卡，下班时间留空即可';
+  instructionExample: string = '# 5. 示例：';
+  exampleRow: string = '2026-06-01,09:00,18:30';
+}
+
 export class CsvUtils {
-  static buildTemplateCsv(): string {
+  static buildTemplateCsv(text: CsvTextResources): string {
     let templateLines: string[] = [];
-    templateLines.push('\uFEFF日期,上班打卡时间,下班打卡时间');
-    templateLines.push('# 说明：');
-    templateLines.push('# 1. 日期格式为 YYYY-MM-DD，例如 2026-06-01');
-    templateLines.push('# 2. 打卡时间格式为 HH:mm，例如 09:00');
-    templateLines.push('# 3. 同一日期请填写在同一行，上班时间和下班时间分列填写');
-    templateLines.push('# 4. 如果某天只有一次打卡，下班时间留空即可');
-    templateLines.push('# 5. 示例：');
-    templateLines.push('2026-06-01,09:00,18:30');
+    templateLines.push('\uFEFF' + text.header);
+    templateLines.push(text.instructionTitle);
+    templateLines.push(text.instructionDate);
+    templateLines.push(text.instructionTime);
+    templateLines.push(text.instructionSameDay);
+    templateLines.push(text.instructionSinglePunch);
+    templateLines.push(text.instructionExample);
+    templateLines.push(text.exampleRow);
     return templateLines.join('\r\n');
   }
 
-  static buildMonthCsv(records: DailyPunchRecord[]): string {
+  static buildMonthCsv(records: DailyPunchRecord[], text: CsvTextResources): string {
     let csvLines: string[] = [];
-    csvLines.push('\uFEFF日期,上班打卡时间,下班打卡时间');
+    csvLines.push('\uFEFF' + text.header);
     let recIdx: number = 0;
     while (recIdx < records.length) {
       let record: DailyPunchRecord = records[recIdx];

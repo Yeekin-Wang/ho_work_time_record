@@ -1,4 +1,4 @@
-import { common } from '@kit.AbilityKit';
+﻿import { common } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { promptAction, LengthMetrics, router } from '@kit.ArkUI';
 import { ExcludedRange } from '../model/ExcludedRange';
@@ -9,6 +9,7 @@ import { IndexImportExportService, ImportRecordsResult } from '../service/IndexI
 import { PersistState } from '../service/IndexPreferencesService';
 import { ThemeService } from '../service/ThemeService';
 import { WorkTimeStateService } from '../service/WorkTimeStateService';
+import { ResourceTextService } from '../service/ResourceTextService';
 import { DEFAULT_RANGE_END, DEFAULT_RANGE_START, DEFAULT_TARGET_HOURS, DEFAULT_WORKDAY_START, THEME_MODE_SYSTEM } from '../constants/IndexConstants';
 import { SettingsHeader } from '../components/index/SettingsHeader';
 import { WorkdayStartCard } from '../components/index/WorkdayStartCard';
@@ -18,6 +19,7 @@ import { DarkModeCard } from '../components/index/DarkModeCard';
 import { DataManagementCard } from '../components/index/DataManagementCard';
 import { RangeEditDialog } from '../components/dialogs/RangeEditDialog';
 import { RangeConflictDialog } from '../components/dialogs/RangeConflictDialog';
+import { CsvTextResources } from '../utils/CsvUtils';
 import { CustomTimePickerDialog } from './CustomTimePickerDialog';
 
 @Entry
@@ -50,13 +52,20 @@ struct SettingsPage {
   }
 
   build() {
+    WithTheme({ colorMode: ThemeService.getThemeColorMode(this.themeMode) }) {
+      this.buildThemedContent();
+    }
+  }
+
+  @Builder
+  buildThemedContent() {
     Stack({ alignContent: Alignment.TopStart }) {
       this.buildSettingsContent();
       this.buildDialogs();
     }
     .width('100%')
     .height('100%')
-    .backgroundColor(this.isEffectiveDarkMode() ? '#1A1F2E' : '#F9FBFF')
+    .backgroundColor(ThemeService.getColor('page_bg', this.isEffectiveDarkMode()))
     .animation({ duration: 220, curve: Curve.EaseInOut })
     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
     .safeAreaPadding({
@@ -282,7 +291,8 @@ struct SettingsPage {
     let isStartPicked: boolean = isStart;
     this.rangeTimePickerController = new CustomDialogController({
       builder: CustomTimePickerDialog({
-        title: isStart ? '选择开始时间' : '选择结束时间',
+        title: isStart ? $r('app.string.dialog_pick_start_time_title') : $r('app.string.dialog_pick_end_time_title'),
+        darkModeEnabled: this.isEffectiveDarkMode(),
         selectedHour: hour,
         selectedMinute: minute,
         useMilitaryTime: true,
@@ -322,7 +332,8 @@ struct SettingsPage {
 
     this.workdayStartPickerController = new CustomDialogController({
       builder: CustomTimePickerDialog({
-        title: '设置上班时间',
+        title: $r('app.string.dialog_workday_start_title'),
+        darkModeEnabled: this.isEffectiveDarkMode(),
         selectedHour: hour,
         selectedMinute: minute,
         useMilitaryTime: true,
@@ -401,17 +412,37 @@ struct SettingsPage {
     this.persistState();
   }
 
+  private getText(resourceName: string, fallback: string): string {
+    let context: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext;
+    return ResourceTextService.getString(context, resourceName, fallback);
+  }
+
+  private buildCsvTextResources(context: common.UIAbilityContext): CsvTextResources {
+    let text: CsvTextResources = new CsvTextResources();
+    text.fileNamePrefix = ResourceTextService.getString(context, 'csv_file_prefix', text.fileNamePrefix);
+    text.templateFileName = ResourceTextService.getString(context, 'csv_template_file_name', text.templateFileName);
+    text.zipSuffixChoice = ResourceTextService.getString(context, 'csv_zip_suffix_choice', text.zipSuffixChoice);
+    text.header = ResourceTextService.getString(context, 'csv_header', text.header);
+    text.instructionTitle = ResourceTextService.getString(context, 'csv_instruction_title', text.instructionTitle);
+    text.instructionDate = ResourceTextService.getString(context, 'csv_instruction_date', text.instructionDate);
+    text.instructionTime = ResourceTextService.getString(context, 'csv_instruction_time', text.instructionTime);
+    text.instructionSameDay = ResourceTextService.getString(context, 'csv_instruction_same_day', text.instructionSameDay);
+    text.instructionSinglePunch = ResourceTextService.getString(context, 'csv_instruction_single_punch', text.instructionSinglePunch);
+    text.instructionExample = ResourceTextService.getString(context, 'csv_instruction_example', text.instructionExample);
+    text.exampleRow = ResourceTextService.getString(context, 'csv_example_row', text.exampleRow);
+    return text;
+  }
   private async exportRecordsToCsv(): Promise<void> {
     try {
       let context: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext;
-      let exported: boolean = await this.importExportService.exportData(context, this.records);
+      let exported: boolean = await this.importExportService.exportData(context, this.records, this.buildCsvTextResources(context));
       if (exported) {
-        this.getUIContext().getPromptAction().showToast({ message: '导出成功' });
+        this.getUIContext().getPromptAction().showToast({ message: $r('app.string.toast_export_success') });
       }
     } catch (error) {
       let err: BusinessError = error as BusinessError;
       if (err.code !== 13900015) {
-        this.getUIContext().getPromptAction().showToast({ message: '导出失败: ' + err.message });
+        this.getUIContext().getPromptAction().showToast({ message: this.getText('toast_export_failed_prefix', '导出失败: ') + err.message });
       }
     }
   }
@@ -423,14 +454,17 @@ struct SettingsPage {
       if (importResult.importedCount > 0) {
         this.records = this.importExportService.mergeRecords(this.records, importResult.records);
         this.persistState();
-        this.getUIContext().getPromptAction().showToast({ message: '导入成功，共 ' + importResult.importedCount.toString() + ' 天数据' });
+        this.getUIContext().getPromptAction().showToast({
+          message: this.getText('toast_import_success_prefix', '导入成功，共 ') + importResult.importedCount.toString() +
+            this.getText('toast_import_success_suffix', ' 天数据')
+        });
       } else if (importResult.selected) {
-        this.getUIContext().getPromptAction().showToast({ message: '未解析到有效打卡数据' });
+        this.getUIContext().getPromptAction().showToast({ message: $r('app.string.toast_import_empty') });
       }
     } catch (error) {
       let err: BusinessError = error as BusinessError;
       if (err.code !== 13900015) {
-        this.getUIContext().getPromptAction().showToast({ message: '导入失败: ' + err.message });
+        this.getUIContext().getPromptAction().showToast({ message: this.getText('toast_import_failed_prefix', '导入失败: ') + err.message });
       }
     }
   }
@@ -438,23 +472,23 @@ struct SettingsPage {
   private confirmClearAllRecords(): void {
     let context: UIContext = this.getUIContext();
     context.getPromptAction().showDialog({
-      title: '确认清空',
-      message: '确定要清空所有打卡数据吗？此操作不可恢复，设置项配置不会受影响。',
+      title: $r('app.string.dialog_clear_title'),
+      message: $r('app.string.dialog_clear_message'),
       buttons: [
         {
-          text: '取消',
-          color: this.isEffectiveDarkMode() ? '#8892A4' : '#60708A'
+          text: $r('app.string.button_cancel'),
+          color: ThemeService.getColor('text_secondary', this.isEffectiveDarkMode())
         },
         {
-          text: '确认清空',
-          color: '#D85353'
+          text: $r('app.string.button_confirm_clear'),
+          color: ThemeService.getColor('danger', this.isEffectiveDarkMode())
         }
       ]
     }).then((data: promptAction.ShowDialogSuccessResponse) => {
       if (data.index === 1) {
         this.stateService.clearAllRecords();
         this.records = [];
-        context.getPromptAction().showToast({ message: '打卡数据已清空' });
+        context.getPromptAction().showToast({ message: $r('app.string.toast_records_cleared') });
       }
     }).catch(() => {});
   }

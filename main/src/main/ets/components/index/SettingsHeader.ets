@@ -1,3 +1,4 @@
+﻿import { ThemeService } from '../../service/ThemeService';
 @Component
 export struct SettingsHeader {
   @Prop darkModeEnabled: boolean = false;
@@ -6,21 +7,21 @@ export struct SettingsHeader {
   build() {
     Column({ space: 16 }) {
       Stack({ alignContent: Alignment.Center }) {
-        Text('设置')
+        Text($r('app.string.page_settings_title'))
           .fontSize(28)
           .fontWeight(FontWeight.Bold)
-          .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
+          .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
 
         Row() {
-          Button('‹')
+          Button($r('app.string.button_back'))
             .height(42)
             .width(42)
             .fontSize(22)
             .fontWeight(FontWeight.Normal)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
-            .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
+            .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled))
+            .backgroundColor(ThemeService.getColor('card_bg', this.darkModeEnabled))
             .borderRadius(21)
-            .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
+            .border({ width: 1, color: ThemeService.getColor('card_border', this.darkModeEnabled) })
             .onClick(() => {
               this.onBack();
             });
@@ -35,7 +36,7 @@ export struct SettingsHeader {
         Blank();
         Text('')
           .fontSize(13)
-          .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+          .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
         Blank();
       }
       .width('100%');

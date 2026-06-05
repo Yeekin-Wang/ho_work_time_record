@@ -4,7 +4,7 @@ import { util } from '@kit.ArkTS';
 import { zlib } from '@kit.BasicServicesKit';
 import { DailyPunchRecord } from '../model/DailyPunchRecord';
 import { TimeUtils } from './TimeUtils';
-import { CsvUtils } from '../utils/CsvUtils';
+import { CsvTextResources, CsvUtils } from '../utils/CsvUtils';
 
 export class ImportRecordsResult {
   records: DailyPunchRecord[] = [];
@@ -13,7 +13,7 @@ export class ImportRecordsResult {
 }
 
 export class IndexImportExportService {
-  async exportData(context: common.UIAbilityContext, records: DailyPunchRecord[]): Promise<boolean> {
+  async exportData(context: common.UIAbilityContext, records: DailyPunchRecord[], csvText: CsvTextResources): Promise<boolean> {
     let now: Date = new Date();
     let timeStamp: string = now.getFullYear().toString() +
       TimeUtils.toTwoDigits(now.getMonth() + 1) +
@@ -22,19 +22,19 @@ export class IndexImportExportService {
       TimeUtils.toTwoDigits(now.getMinutes()) +
       TimeUtils.toTwoDigits(now.getSeconds());
 
-    let baseName: string = '牛马工时簿_打卡记录_' + timeStamp;
+    let baseName: string = csvText.fileNamePrefix + timeStamp;
     let tempDir: string = context.cacheDir + '/' + baseName;
     let zipPath: string = context.cacheDir + '/' + baseName + '.zip';
 
     try {
-      this.writeExportFiles(tempDir, records);
+      this.writeExportFiles(tempDir, records, csvText);
 
       let options: zlib.Options = {};
       await zlib.compressFile(tempDir, zipPath, options);
 
       let documentSaveOptions: picker.DocumentSaveOptions = new picker.DocumentSaveOptions();
       documentSaveOptions.newFileNames = [baseName + '.zip'];
-      documentSaveOptions.fileSuffixChoices = ['ZIP 文件|.zip'];
+      documentSaveOptions.fileSuffixChoices = [csvText.zipSuffixChoice];
 
       let documentViewPicker: picker.DocumentViewPicker = new picker.DocumentViewPicker(context);
       let saveResult: string[] = await documentViewPicker.save(documentSaveOptions);
@@ -82,7 +82,7 @@ export class IndexImportExportService {
     return CsvUtils.mergeRecords(existingRecords, importRecords);
   }
 
-  private writeExportFiles(tempDir: string, records: DailyPunchRecord[]): void {
+  private writeExportFiles(tempDir: string, records: DailyPunchRecord[], csvText: CsvTextResources): void {
     if (!fileIo.accessSync(tempDir)) {
       fileIo.mkdirSync(tempDir);
     }
@@ -90,7 +90,7 @@ export class IndexImportExportService {
     let monthMap: Map<string, DailyPunchRecord[]> = CsvUtils.groupRecordsByMonth(records);
     let sortedMonths: string[] = Array.from(monthMap.keys()).sort();
     if (sortedMonths.length === 0) {
-      this.writeTextFile(tempDir + '/导入模板.csv', CsvUtils.buildTemplateCsv());
+      this.writeTextFile(tempDir + '/' + csvText.templateFileName, CsvUtils.buildTemplateCsv(csvText));
       return;
     }
 
@@ -101,7 +101,7 @@ export class IndexImportExportService {
       monthRecords.sort((a: DailyPunchRecord, b: DailyPunchRecord) => {
         return a.dateKey.localeCompare(b.dateKey);
       });
-      this.writeTextFile(tempDir + '/' + monthKey + '.csv', CsvUtils.buildMonthCsv(monthRecords));
+      this.writeTextFile(tempDir + '/' + monthKey + '.csv', CsvUtils.buildMonthCsv(monthRecords, csvText));
       monthIdx += 1;
     }
   }

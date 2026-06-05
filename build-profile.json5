@@ -5,13 +5,13 @@
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "storeFile": "D:/document/harmony os密钥/yeekin.p12",
-          "storePassword": "0000001A23880358DB71F3D7647FF7485941866FF9A596DF10B8642D0E3E0AC4083AF8F9E9BD4BE28B92",
-          "keyAlias": "yeekin_key",
-          "keyPassword": "0000001AECEAFF44DC9F4BF17A0067AE764F3B8C54CBCE46F8E0A68B98E722AEE3FE3790B75689B7D731",
+          "certpath": "C:\\Users\\masqu\\.ohos\\config\\default_ho_work_time_record_MvuvGQZqDn2pkwEaRocP7HWMPxuSQai_cRmx-exnhlQ=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001B38FB9E4B9888EC76BB7E26497F9BB1A3926B1B34F4CBE2367FAEDD28433C9A0E66665E50DB2E5D",
+          "profile": "C:\\Users\\masqu\\.ohos\\config\\default_ho_work_time_record_MvuvGQZqDn2pkwEaRocP7HWMPxuSQai_cRmx-exnhlQ=.p7b",
           "signAlg": "SHA256withECDSA",
-          "profile": "D:/document/harmony os密钥/workhour tracker/workhour_trackerRelease.p7b",
-          "certpath": "D:/document/harmony os密钥/yeekin_release.cer"
+          "storeFile": "C:\\Users\\masqu\\.ohos\\config\\default_ho_work_time_record_MvuvGQZqDn2pkwEaRocP7HWMPxuSQai_cRmx-exnhlQ=.p12",
+          "storePassword": "0000001B4F01D95ACC14C8E863981FCE204ACBD32663FFF97126D086D6FDFC4441C580B70D3703A77DF41F"
         }
       }
     ],

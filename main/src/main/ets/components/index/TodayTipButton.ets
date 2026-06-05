@@ -1,3 +1,4 @@
+﻿import { ThemeService } from '../../service/ThemeService';
 @Component
 export struct TodayTipButton {
   @Prop darkModeEnabled: boolean = false;
@@ -5,11 +6,11 @@ export struct TodayTipButton {
   onTap: () => void = () => {};
 
   build() {
-    Button('今日')
+    Button($r('app.string.button_today'))
       .height(30)
       .fontSize(13)
-      .fontColor(this.darkModeEnabled ? '#8B9EF5' : '#2E67F8')
-      .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#EEF3FF')
+      .fontColor(ThemeService.getColor('brand_text', this.darkModeEnabled))
+      .backgroundColor(ThemeService.getColor('surface_brand_bg', this.darkModeEnabled))
       .borderRadius(15)
       .padding({ left: 12, right: 12 })
       .scale({ x: this.todayButtonScale, y: this.todayButtonScale })

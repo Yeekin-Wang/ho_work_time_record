@@ -1,3 +1,4 @@
+﻿import { ThemeService } from '../../service/ThemeService';
 import { CalendarSlot } from '../../model/CalendarSlot';
 import { IndexCalendarService } from '../../service/IndexCalendarService';
 
@@ -20,21 +21,21 @@ export struct DayCell {
         Text(this.slot.day.toString())
           .fontSize(15)
           .fontWeight(this.slot.dateKey === this.selectedDateKey ? FontWeight.Bold : FontWeight.Regular)
-          .fontColor(this.slot.dateKey === this.selectedDateKey ? '#FFFFFF' : (this.darkModeEnabled ? '#E8EDF5' : '#132033'));
+          .fontColor(this.slot.dateKey === this.selectedDateKey ? ThemeService.getColor('text_inverse', this.darkModeEnabled) : (ThemeService.getColor('text_primary', this.darkModeEnabled)));
         Row({ space: 4 }) {
           if (this.slot.punchCount >= 1) {
             Row()
               .width(5)
               .height(5)
               .borderRadius(3)
-              .backgroundColor(this.slot.dateKey === this.selectedDateKey ? '#FFFFFF' : '#1EA97C');
+              .backgroundColor(this.slot.dateKey === this.selectedDateKey ? ThemeService.getColor('text_inverse', this.darkModeEnabled) : ThemeService.getColor('success', this.darkModeEnabled));
           }
           if (this.slot.punchCount >= 2) {
             Row()
               .width(5)
               .height(5)
               .borderRadius(3)
-              .backgroundColor(this.slot.dateKey === this.selectedDateKey ? '#FFFFFF' : '#1EA97C');
+              .backgroundColor(this.slot.dateKey === this.selectedDateKey ? ThemeService.getColor('text_inverse', this.darkModeEnabled) : ThemeService.getColor('success', this.darkModeEnabled));
           }
         }
         .width('100%')
@@ -46,7 +47,7 @@ export struct DayCell {
       .justifyContent(FlexAlign.Center)
       .backgroundColor(IndexCalendarService.getDayCellColor(this.slot, this.selectedDateKey, this.darkModeEnabled))
       .borderRadius(15)
-      .border(this.slot.isToday && this.slot.dateKey !== this.selectedDateKey ? { width: 1, color: this.darkModeEnabled ? '#4A5A8A' : '#BFD4FF' } : { width: 0, color: '#00000000' })
+      .border(this.slot.isToday && this.slot.dateKey !== this.selectedDateKey ? { width: 1, color: ThemeService.getColor('brand_focus_border', this.darkModeEnabled) } : { width: 0, color: ThemeService.getColor('transparent', this.darkModeEnabled) })
       .animation({ duration: 200, curve: Curve.EaseInOut })
       .transition(TransitionEffect.translate({ x: 12, y: 0 }).combine(TransitionEffect.OPACITY).animation({ duration: 200, curve: Curve.EaseInOut }))
       .onClick(() => {

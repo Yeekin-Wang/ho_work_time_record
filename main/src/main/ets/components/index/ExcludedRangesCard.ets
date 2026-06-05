@@ -1,3 +1,4 @@
+﻿import { ThemeService } from '../../service/ThemeService';
 import { ExcludedRange } from '../../model/ExcludedRange';
 
 @Component
@@ -15,13 +16,13 @@ export struct ExcludedRangesCard {
     Column({ space: 14 }) {
       Row() {
         Column({ space: 4 }) {
-          Text('排除时段')
+          Text($r('app.string.card_excluded_ranges_title'))
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-          Text('排除午休等不算工时的时段。')
+            .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
+          Text($r('app.string.card_excluded_ranges_desc'))
             .fontSize(13)
-            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+            .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
         }
         .alignItems(HorizontalAlign.Start);
 
@@ -35,22 +36,27 @@ export struct ExcludedRangesCard {
           ForEach(this.excludedRanges, (range: ExcludedRange, index: number) => {
             Row() {
               Column({ space: 2 }) {
-                Text('排除时段 ' + (index + 1).toString())
-                  .fontSize(13)
-                  .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+                Row() {
+                  Text($r('app.string.excluded_range_item_prefix'))
+                    .fontSize(13)
+                    .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
+                  Text((index + 1).toString())
+                    .fontSize(13)
+                    .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
+                }
                 Text(range.start + ' - ' + range.end)
                   .fontSize(17)
                   .fontWeight(FontWeight.Medium)
-                  .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
+                  .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
               }
 
               if (this.confirmDeleteIndex === index) {
-                Button('确认删除')
+                Button($r('app.string.button_confirm_delete'))
                   .height(34)
                   .fontSize(13)
                   .fontWeight(FontWeight.Medium)
-                  .fontColor('#FFFFFF')
-                  .backgroundColor('#D85353')
+                  .fontColor(ThemeService.getColor('text_inverse', this.darkModeEnabled))
+                  .backgroundColor(ThemeService.getColor('danger', this.darkModeEnabled))
                   .borderRadius(17)
                   .padding({ left: 14, right: 14 })
                   .transition(TransitionEffect.scale({ x: 0.5, y: 0.5 }).combine(TransitionEffect.OPACITY))
@@ -61,11 +67,11 @@ export struct ExcludedRangesCard {
                 Button() {
                   Text('✕')
                     .fontSize(14)
-                    .fontColor('#D85353');
+                    .fontColor(ThemeService.getColor('danger', this.darkModeEnabled));
                 }
                 .width(28)
                 .height(28)
-                .backgroundColor(this.darkModeEnabled ? '#3D2030' : '#FFF5F5')
+                .backgroundColor(ThemeService.getColor('danger_soft_bg', this.darkModeEnabled))
                 .borderRadius(14)
                 .padding(0)
                 .transition(TransitionEffect.scale({ x: 0.5, y: 0.5 }).combine(TransitionEffect.OPACITY))
@@ -77,7 +83,7 @@ export struct ExcludedRangesCard {
             .width('100%')
             .padding({ left: 14, right: 14, top: 14, bottom: 14 })
             .borderRadius(18)
-            .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
+            .backgroundColor(ThemeService.getColor('surface_bg', this.darkModeEnabled))
             .justifyContent(FlexAlign.SpaceBetween)
             .alignItems(VerticalAlign.Center)
             .transition(TransitionEffect.translate({ x: -20, y: 0 }).combine(TransitionEffect.OPACITY))
@@ -104,14 +110,14 @@ export struct ExcludedRangesCard {
             Text('+')
               .fontSize(26)
               .fontWeight(FontWeight.Medium)
-              .fontColor(this.darkModeEnabled ? '#8B9EF5' : '#2E67F8');
+              .fontColor(ThemeService.getColor('brand_text', this.darkModeEnabled));
           }
           .width(34)
           .height(34)
           .borderRadius(17)
           .border({
             width: 1,
-            color: this.darkModeEnabled ? '#8B9EF5' : '#2E67F8',
+            color: ThemeService.getColor('brand_text', this.darkModeEnabled),
             style: BorderStyle.Dashed
           })
           .justifyContent(FlexAlign.Center)
@@ -122,7 +128,7 @@ export struct ExcludedRangesCard {
       .width('100%')
       .padding({ left: 14, right: 14, top: 14, bottom: 14 })
       .borderRadius(18)
-      .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
+      .backgroundColor(ThemeService.getColor('surface_bg', this.darkModeEnabled))
       .onClick(() => {
         this.onAdd();
       });
@@ -131,9 +137,9 @@ export struct ExcludedRangesCard {
     .alignItems(HorizontalAlign.Start)
     .padding(16)
     .borderRadius(24)
-    .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-    .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-    .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
+    .backgroundColor(ThemeService.getColor('card_bg', this.darkModeEnabled))
+    .border({ width: 1, color: ThemeService.getColor('card_border', this.darkModeEnabled) })
+    .shadow({ radius: 14, color: ThemeService.getColor('shadow_card', this.darkModeEnabled), offsetX: 0, offsetY: 4 })
     .animation({ duration: 220, curve: Curve.EaseInOut })
     .onClick(() => {
       if (this.confirmDeleteIndex >= 0) {

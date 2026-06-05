@@ -1,3 +1,4 @@
+﻿import { ThemeService } from '../../service/ThemeService';
 import { TimeUtils } from '../../service/TimeUtils';
 
 @Component
@@ -17,20 +18,25 @@ export struct PunchCardSection {
     Column({ space: 16 }) {
       Row() {
         Column({ space: 4 }) {
-          Text('当前日期')
+          Text($r('app.string.card_current_date_title'))
             .fontSize(12)
-            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+            .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
           Text(this.selectedDateLabel)
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
+            .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
         }
 
-        Text('工时 ' + TimeUtils.formatMinutes(this.selectedWorkMinutes))
-          .fontSize(14)
-          .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
+        Row() {
+          Text($r('app.string.card_work_hours_prefix'))
+            .fontSize(14)
+            .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
+          Text(TimeUtils.formatMinutes(this.selectedWorkMinutes))
+            .fontSize(14)
+            .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
+        }
           .padding({ left: 12, right: 12, top: 8, bottom: 8 })
-          .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#EEF3FF')
+          .backgroundColor(ThemeService.getColor('surface_brand_bg', this.darkModeEnabled))
           .borderRadius(18);
       }
       .width('100%')
@@ -38,27 +44,27 @@ export struct PunchCardSection {
       .alignItems(VerticalAlign.Center);
 
       Row({ space: 12 }) {
-        this.buildTimeCard('上班打卡', 'start');
-        this.buildTimeCard('下班打卡', 'end');
+        this.buildTimeCard($r('app.string.card_start_punch_title'), 'start');
+        this.buildTimeCard($r('app.string.card_end_punch_title'), 'end');
       }
       .width('100%');
 
       Row() {
         Text(this.excludeSummaryText)
           .fontSize(13)
-          .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+          .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
       }
       .width('100%')
       .justifyContent(FlexAlign.Start);
 
       Stack({ alignContent: Alignment.Center }) {
-        Button('立即打卡')
+        Button($r('app.string.button_punch_now'))
           .width('100%')
           .height(54)
           .fontSize(18)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#FFFFFF')
-          .backgroundColor('#2E67F8')
+          .fontColor(ThemeService.getColor('text_inverse', this.darkModeEnabled))
+          .backgroundColor(ThemeService.getColor('brand', this.darkModeEnabled))
           .borderRadius(22)
           .scale({ x: this.punchCardScale, y: this.punchCardScale })
           .onClick(() => {
@@ -72,42 +78,42 @@ export struct PunchCardSection {
             .borderRadius(22)
             .border({
               width: 2,
-              color: this.darkModeEnabled ? '#2ED67C' : '#1EA97C'
+              color: ThemeService.getColor('success', this.darkModeEnabled)
             })
             .opacity(this.punchButtonGlow * 0.6)
             .scale({ x: 1 + this.punchButtonGlow * 0.1, y: 1 + this.punchButtonGlow * 0.1 })
-            .backgroundColor(this.darkModeEnabled ? '#2ED67C' : '#1EA97C')
+            .backgroundColor(ThemeService.getColor('success', this.darkModeEnabled))
         }
       }
       .width('100%');
     }
     .width('100%')
     .padding(16)
-    .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
+    .backgroundColor(ThemeService.getColor('card_bg', this.darkModeEnabled))
     .borderRadius(24)
-    .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-    .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
+    .border({ width: 1, color: ThemeService.getColor('card_border', this.darkModeEnabled) })
+    .shadow({ radius: 14, color: ThemeService.getColor('shadow_card', this.darkModeEnabled), offsetX: 0, offsetY: 4 })
     .animation({ duration: 220, curve: Curve.EaseInOut });
   }
 
   @Builder
-  buildTimeCard(title: string, field: string) {
+  buildTimeCard(title: ResourceStr, field: string) {
     Button() {
       Column({ space: 8 }) {
         Text(title)
           .fontSize(13)
-          .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+          .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
         if (field === 'start') {
           Text(this.startTimeText)
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
+            .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled))
             .animation({ duration: 200, curve: Curve.EaseInOut });
         } else {
           Text(this.endTimeText)
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
+            .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled))
             .animation({ duration: 200, curve: Curve.EaseInOut });
         }
       }
@@ -117,7 +123,7 @@ export struct PunchCardSection {
     .layoutWeight(1)
     .height(110)
     .padding(14)
-    .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
+    .backgroundColor(ThemeService.getColor('surface_bg', this.darkModeEnabled))
     .borderRadius(18)
     .animation({ duration: 200, curve: Curve.EaseInOut })
     .onClick(() => {

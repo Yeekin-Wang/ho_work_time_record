@@ -11,6 +11,334 @@
     {
       "name": "MainAbility_label",
       "value": "牛马工时簿"
+    },
+    {
+      "name": "page_punch_title",
+      "value": "打卡"
+    },
+    {
+      "name": "page_settings_title",
+      "value": "设置"
+    },
+    {
+      "name": "button_settings",
+      "value": "设置"
+    },
+    {
+      "name": "button_back",
+      "value": "‹"
+    },
+    {
+      "name": "button_today",
+      "value": "今日"
+    },
+    {
+      "name": "button_punch_now",
+      "value": "立即打卡"
+    },
+    {
+      "name": "button_export",
+      "value": "导出数据"
+    },
+    {
+      "name": "button_import",
+      "value": "导入数据"
+    },
+    {
+      "name": "button_clear",
+      "value": "清空"
+    },
+    {
+      "name": "button_cancel",
+      "value": "取消"
+    },
+    {
+      "name": "button_confirm",
+      "value": "确定"
+    },
+    {
+      "name": "button_save",
+      "value": "保存"
+    },
+    {
+      "name": "button_add",
+      "value": "添加"
+    },
+    {
+      "name": "button_confirm_delete",
+      "value": "确认删除"
+    },
+    {
+      "name": "button_confirm_clear",
+      "value": "确认清空"
+    },
+    {
+      "name": "button_got_it",
+      "value": "知道了"
+    },
+    {
+      "name": "card_current_date_title",
+      "value": "当前日期"
+    },
+    {
+      "name": "card_work_hours_prefix",
+      "value": "工时 "
+    },
+    {
+      "name": "card_start_punch_title",
+      "value": "上班打卡"
+    },
+    {
+      "name": "card_end_punch_title",
+      "value": "下班打卡"
+    },
+    {
+      "name": "card_summary_compare_title",
+      "value": "与目标平均工时对比"
+    },
+    {
+      "name": "card_workday_start_title",
+      "value": "上班时间"
+    },
+    {
+      "name": "card_workday_start_desc",
+      "value": "早于此时间的打卡，将从这里开始计算工时。"
+    },
+    {
+      "name": "card_excluded_ranges_title",
+      "value": "排除时段"
+    },
+    {
+      "name": "card_excluded_ranges_desc",
+      "value": "排除午休等不算工时的时段。"
+    },
+    {
+      "name": "excluded_range_item_prefix",
+      "value": "排除时段 "
+    },
+    {
+      "name": "card_target_hours_title",
+      "value": "每日目标"
+    },
+    {
+      "name": "card_target_hours_desc",
+      "value": "用于计算平均工时和目标差距。"
+    },
+    {
+      "name": "card_target_hours_suffix",
+      "value": " 小时/天"
+    },
+    {
+      "name": "card_theme_title",
+      "value": "显示模式"
+    },
+    {
+      "name": "card_theme_desc",
+      "value": "选择浅色、深色或跟随系统。"
+    },
+    {
+      "name": "theme_light",
+      "value": "浅色"
+    },
+    {
+      "name": "theme_dark",
+      "value": "深色"
+    },
+    {
+      "name": "theme_system",
+      "value": "跟随系统"
+    },
+    {
+      "name": "card_data_title",
+      "value": "导入与导出"
+    },
+    {
+      "name": "card_data_desc",
+      "value": "将打卡记录保存为 CSV，或从 CSV 恢复记录。"
+    },
+    {
+      "name": "card_clear_records_title",
+      "value": "清空记录"
+    },
+    {
+      "name": "card_clear_records_desc",
+      "value": "只删除打卡记录，不影响设置项。"
+    },
+    {
+      "name": "dialog_range_add_title",
+      "value": "新增排除时段"
+    },
+    {
+      "name": "dialog_range_edit_title",
+      "value": "编辑排除时段"
+    },
+    {
+      "name": "dialog_range_desc",
+      "value": "使用系统时间滑动选择器，输入体验更正式，避免手动输入格式错误。"
+    },
+    {
+      "name": "field_start",
+      "value": "开始"
+    },
+    {
+      "name": "field_end",
+      "value": "结束"
+    },
+    {
+      "name": "dialog_range_conflict_title",
+      "value": "时段冲突"
+    },
+    {
+      "name": "dialog_range_conflict_message",
+      "value": "当前排除时段与已配置的排除时段存在冲突，请调整时间后再试。"
+    },
+    {
+      "name": "dialog_time_picker_default_title",
+      "value": "选择时间"
+    },
+    {
+      "name": "dialog_pick_start_time_title",
+      "value": "选择开始时间"
+    },
+    {
+      "name": "dialog_pick_end_time_title",
+      "value": "选择结束时间"
+    },
+    {
+      "name": "dialog_workday_start_title",
+      "value": "设置上班时间"
+    },
+    {
+      "name": "dialog_clear_title",
+      "value": "确认清空"
+    },
+    {
+      "name": "dialog_clear_message",
+      "value": "确定要清空所有打卡数据吗？此操作不可恢复，设置项配置不会受影响。"
+    },
+    {
+      "name": "toast_open_settings_failed_prefix",
+      "value": "打开设置失败: "
+    },
+    {
+      "name": "toast_export_success",
+      "value": "导出成功"
+    },
+    {
+      "name": "toast_export_failed_prefix",
+      "value": "导出失败: "
+    },
+    {
+      "name": "toast_import_success_prefix",
+      "value": "导入成功，共 "
+    },
+    {
+      "name": "toast_import_success_suffix",
+      "value": " 天数据"
+    },
+    {
+      "name": "toast_import_empty",
+      "value": "未解析到有效打卡数据"
+    },
+    {
+      "name": "toast_import_failed_prefix",
+      "value": "导入失败: "
+    },
+    {
+      "name": "toast_records_cleared",
+      "value": "打卡数据已清空"
+    },
+    {
+      "name": "summary_no_excluded_ranges",
+      "value": "未设置排除时段"
+    },
+    {
+      "name": "summary_excluded_ranges_prefix",
+      "value": "已排除 "
+    },
+    {
+      "name": "summary_excluded_ranges_suffix",
+      "value": " 个时段"
+    },
+    {
+      "name": "summary_target_average",
+      "value": "目标平均工时"
+    },
+    {
+      "name": "summary_current_average",
+      "value": "当前平均工时"
+    },
+    {
+      "name": "summary_difference_equal",
+      "value": "与目标持平"
+    },
+    {
+      "name": "summary_difference_more_prefix",
+      "value": "比目标多 "
+    },
+    {
+      "name": "summary_difference_less_prefix",
+      "value": "比目标少 "
+    },
+    {
+      "name": "dialog_edit_start_punch_title",
+      "value": "编辑上班时间"
+    },
+    {
+      "name": "dialog_edit_end_punch_title",
+      "value": "编辑下班时间"
+    },
+    {
+      "name": "date_today",
+      "value": "今天"
+    },
+    {
+      "name": "date_weekday_prefix",
+      "value": "星期"
+    },
+    {
+      "name": "csv_file_prefix",
+      "value": "牛马工时簿_打卡记录_"
+    },
+    {
+      "name": "csv_template_file_name",
+      "value": "导入模板.csv"
+    },
+    {
+      "name": "csv_zip_suffix_choice",
+      "value": "ZIP 文件|.zip"
+    },
+    {
+      "name": "csv_header",
+      "value": "日期,上班打卡时间,下班打卡时间"
+    },
+    {
+      "name": "csv_instruction_title",
+      "value": "# 说明："
+    },
+    {
+      "name": "csv_instruction_date",
+      "value": "# 1. 日期格式为 YYYY-MM-DD，例如 2026-06-01"
+    },
+    {
+      "name": "csv_instruction_time",
+      "value": "# 2. 打卡时间格式为 HH:mm，例如 09:00"
+    },
+    {
+      "name": "csv_instruction_same_day",
+      "value": "# 3. 同一日期请填写在同一行，上班时间和下班时间分列填写"
+    },
+    {
+      "name": "csv_instruction_single_punch",
+      "value": "# 4. 如果某天只有一次打卡，下班时间留空即可"
+    },
+    {
+      "name": "csv_instruction_example",
+      "value": "# 5. 示例："
+    },
+    {
+      "name": "csv_example_row",
+      "value": "2026-06-01,09:00,18:30"
     }
   ]
 }

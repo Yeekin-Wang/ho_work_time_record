@@ -1,3 +1,4 @@
+﻿import { ThemeService } from '../../service/ThemeService';
 import { CalendarSlot } from '../../model/CalendarSlot';
 import { WEEKDAY_NAMES } from '../../constants/IndexConstants';
 import { TimeUtils } from '../../service/TimeUtils';
@@ -27,7 +28,7 @@ export struct CalendarCard {
           Text(TimeUtils.getCurrentMonthTitle(this.displayYear, this.displayMonth))
             .fontSize(18)
             .fontWeight(FontWeight.Medium)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
+            .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled))
             .layoutWeight(1);
 
           TodayTipButton({
@@ -51,7 +52,7 @@ export struct CalendarCard {
               .layoutWeight(1)
               .textAlign(TextAlign.Center)
               .fontSize(12)
-              .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+              .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
           }, (item: string) => item);
         }
         .width('100%');
@@ -76,10 +77,10 @@ export struct CalendarCard {
     }
     .width('100%')
     .padding(16)
-    .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
+    .backgroundColor(ThemeService.getColor('card_bg', this.darkModeEnabled))
     .borderRadius(24)
-    .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-    .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
+    .border({ width: 1, color: ThemeService.getColor('card_border', this.darkModeEnabled) })
+    .shadow({ radius: 14, color: ThemeService.getColor('shadow_card', this.darkModeEnabled), offsetX: 0, offsetY: 4 })
     .animation({ duration: 220, curve: Curve.EaseInOut })
     .gesture(
       PanGesture({ direction: PanDirection.Horizontal })

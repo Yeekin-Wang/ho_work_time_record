@@ -1,3 +1,4 @@
+﻿import { ThemeService } from '../../service/ThemeService';
 import { CalendarSlot } from '../../model/CalendarSlot';
 import { WEEKDAY_NAMES } from '../../constants/IndexConstants';
 import { TimeUtils } from '../../service/TimeUtils';
@@ -24,7 +25,7 @@ export struct ExpandedCalendarPanel {
         Text(TimeUtils.getCurrentMonthTitle(this.displayYear, this.displayMonth))
           .fontSize(22)
           .fontWeight(FontWeight.Bold)
-          .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
+          .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled))
           .layoutWeight(1);
       }
       .width('100%')
@@ -39,7 +40,7 @@ export struct ExpandedCalendarPanel {
             .layoutWeight(1)
             .textAlign(TextAlign.Center)
             .fontSize(12)
-            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+            .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
         }, (item: string) => item + '_expanded');
       }
       .width('100%');
@@ -73,9 +74,9 @@ export struct ExpandedCalendarPanel {
     }
     .width('92%')
     .padding(18)
-    .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
+    .backgroundColor(ThemeService.getColor('card_bg', this.darkModeEnabled))
     .borderRadius(28)
-    .shadow({ radius: 20, color: this.darkModeEnabled ? '#0000004D' : '#30223C5C', offsetX: 0, offsetY: 10 })
+    .shadow({ radius: 20, color: ThemeService.getColor('shadow_modal', this.darkModeEnabled), offsetX: 0, offsetY: 10 })
     .animation({ duration: 220, curve: Curve.EaseInOut })
     .gesture(
       PanGesture({ direction: PanDirection.Horizontal })

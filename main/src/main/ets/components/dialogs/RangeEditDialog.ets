@@ -1,3 +1,4 @@
+﻿import { ThemeService } from '../../service/ThemeService';
 @Component
 export struct RangeEditDialog {
   @Prop darkModeEnabled: boolean = false;
@@ -14,7 +15,7 @@ export struct RangeEditDialog {
       Column()
         .width('100%')
         .height('100%')
-        .backgroundColor(this.darkModeEnabled ? '#80000000' : '#660C1729')
+        .backgroundColor(ThemeService.getColor('scrim', this.darkModeEnabled))
         .animation({ duration: 220, curve: Curve.EaseInOut })
         .gesture(
           PanGesture({ direction: PanDirection.Horizontal })
@@ -27,14 +28,14 @@ export struct RangeEditDialog {
         });
 
       Column({ space: 16 }) {
-        Text(this.editRangeIndex >= 0 ? '编辑排除时段' : '新增排除时段')
+        Text(this.editRangeIndex >= 0 ? $r('app.string.dialog_range_edit_title') : $r('app.string.dialog_range_add_title'))
           .fontSize(22)
           .fontWeight(FontWeight.Bold)
-          .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
+          .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
 
-        Text('使用系统时间滑动选择器，输入体验更正式，避免手动输入格式错误。')
+        Text($r('app.string.dialog_range_desc'))
           .fontSize(13)
-          .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+          .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
 
         Row({ space: 12 }) {
           Button() {
@@ -42,18 +43,18 @@ export struct RangeEditDialog {
               Text(this.rangeStartInput)
                 .fontSize(20)
                 .fontWeight(FontWeight.Bold)
-                .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
+                .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
               Blank();
-              Text('开始')
+              Text($r('app.string.field_start'))
                 .fontSize(12)
-                .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+                .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
             }
             .width('100%');
           }
           .layoutWeight(1)
           .height(72)
           .padding({ left: 16, right: 16 })
-          .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
+          .backgroundColor(ThemeService.getColor('surface_bg', this.darkModeEnabled))
           .borderRadius(18)
           .onClick(() => {
             this.onPickStart();
@@ -64,18 +65,18 @@ export struct RangeEditDialog {
               Text(this.rangeEndInput)
                 .fontSize(20)
                 .fontWeight(FontWeight.Bold)
-                .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
+                .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
               Blank();
-              Text('结束')
+              Text($r('app.string.field_end'))
                 .fontSize(12)
-                .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+                .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
             }
             .width('100%');
           }
           .layoutWeight(1)
           .height(72)
           .padding({ left: 16, right: 16 })
-          .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
+          .backgroundColor(ThemeService.getColor('surface_bg', this.darkModeEnabled))
           .borderRadius(18)
           .onClick(() => {
             this.onPickEnd();
@@ -84,24 +85,24 @@ export struct RangeEditDialog {
         .width('100%');
 
         Row({ space: 12 }) {
-          Button('取消')
+          Button($r('app.string.button_cancel'))
             .layoutWeight(1)
             .height(48)
             .fontSize(16)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
-            .backgroundColor(this.darkModeEnabled ? '#2D3548' : '#F6F8FC')
+            .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled))
+            .backgroundColor(ThemeService.getColor('surface_bg', this.darkModeEnabled))
             .borderRadius(20)
             .onClick(() => {
               this.onCancel();
             });
 
-          Button(this.editRangeIndex >= 0 ? '保存' : '添加')
+          Button(this.editRangeIndex >= 0 ? $r('app.string.button_save') : $r('app.string.button_add'))
             .layoutWeight(1)
             .height(48)
             .fontSize(16)
             .fontWeight(FontWeight.Bold)
-            .fontColor('#FFFFFF')
-            .backgroundColor('#2E67F8')
+            .fontColor(ThemeService.getColor('text_inverse', this.darkModeEnabled))
+            .backgroundColor(ThemeService.getColor('brand', this.darkModeEnabled))
             .borderRadius(20)
             .onClick(() => {
               this.onConfirm();
@@ -111,7 +112,7 @@ export struct RangeEditDialog {
       }
       .width('88%')
       .padding(20)
-      .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
+      .backgroundColor(ThemeService.getColor('card_bg', this.darkModeEnabled))
       .borderRadius(28);
     }
     .width('100%')

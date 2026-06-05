@@ -1,6 +1,7 @@
-import { AbilityConstant, Configuration, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
+﻿import { AbilityConstant, Configuration, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
+import { ThemeService } from '../service/ThemeService';
 
 const DOMAIN = 0x0000;
 
@@ -68,9 +69,9 @@ export default class MainAbility extends UIAbility {
       // 沉浸式模式下，状态栏背景由页面背景通过 expandSafeArea 延伸填充
       const systemBarProperties: window.SystemBarProperties = {
         statusBarColor: '#00000000',
-        statusBarContentColor: isDarkMode ? '#E8EDF5' : '#132033',
+        statusBarContentColor: ThemeService.getSystemBarTextColor(isDarkMode),
         navigationBarColor: '#00000000',
-        navigationBarContentColor: isDarkMode ? '#E8EDF5' : '#132033'
+        navigationBarContentColor: ThemeService.getSystemBarTextColor(isDarkMode)
       };
 
       mainWindow.setSystemBarProperties(systemBarProperties, (err) => {
@@ -99,7 +100,7 @@ export default class MainAbility extends UIAbility {
       // 当页面 expandSafeArea 延伸时，窗口背景会透过状态栏区域显示
       const config = this.context.config;
       const isDarkMode = config.colorMode === ConfigurationConstant.ColorMode.COLOR_MODE_DARK;
-      const windowBgColor = isDarkMode ? '#1A1F2E' : '#F9FBFF';
+      const windowBgColor = ThemeService.getPageBackgroundColor(isDarkMode);
       mainWindow.setWindowBackgroundColor(windowBgColor);
 
       hilog.info(DOMAIN, 'testTag', 'Immersive mode set successfully');
@@ -144,7 +145,7 @@ export default class MainAbility extends UIAbility {
         return;
       }
       const isDarkMode = newConfig.colorMode === ConfigurationConstant.ColorMode.COLOR_MODE_DARK;
-      const windowBgColor = isDarkMode ? '#1A1F2E' : '#F9FBFF';
+      const windowBgColor = ThemeService.getPageBackgroundColor(isDarkMode);
       mainWindow.setWindowBackgroundColor(windowBgColor);
     } catch (err) {
       hilog.error(DOMAIN, 'testTag', 'Failed to update window bg color. Cause: %{public}s', JSON.stringify(err));

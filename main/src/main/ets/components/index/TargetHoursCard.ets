@@ -1,3 +1,4 @@
+﻿import { ThemeService } from '../../service/ThemeService';
 import { TimeUtils } from '../../service/TimeUtils';
 
 @Component
@@ -9,20 +10,26 @@ export struct TargetHoursCard {
   build() {
     Column({ space: 14 }) {
       Column({ space: 4 }) {
-        Text('每日目标')
+        Text($r('app.string.card_target_hours_title'))
           .fontSize(22)
           .fontWeight(FontWeight.Bold)
-          .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-        Text('用于计算平均工时和目标差距。')
+          .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
+        Text($r('app.string.card_target_hours_desc'))
           .fontSize(13)
-          .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+          .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
       }
       .alignItems(HorizontalAlign.Start);
 
-      Text(TimeUtils.formatHoursValue(this.targetAverageHours) + ' 小时/天')
-        .fontSize(24)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
+      Row() {
+        Text(TimeUtils.formatHoursValue(this.targetAverageHours))
+          .fontSize(24)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
+        Text($r('app.string.card_target_hours_suffix'))
+          .fontSize(24)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
+      }
 
       Slider({
         value: this.targetAverageHours,
@@ -32,9 +39,9 @@ export struct TargetHoursCard {
         style: SliderStyle.OutSet
       })
         .width('100%')
-        .blockColor(this.darkModeEnabled ? '#8B9EF5' : '#2E67F8')
-        .trackColor(this.darkModeEnabled ? '#3A4255' : '#D8E0F0')
-        .selectedColor(this.darkModeEnabled ? '#8B9EF5' : '#2E67F8')
+        .blockColor(ThemeService.getColor('brand_text', this.darkModeEnabled))
+        .trackColor(ThemeService.getColor('card_border', this.darkModeEnabled))
+        .selectedColor(ThemeService.getColor('brand_text', this.darkModeEnabled))
         .onChange((value: number) => {
           this.onChange(value);
         });
@@ -44,9 +51,9 @@ export struct TargetHoursCard {
     .alignItems(HorizontalAlign.Start)
     .padding(16)
     .borderRadius(24)
-    .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-    .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-    .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
+    .backgroundColor(ThemeService.getColor('card_bg', this.darkModeEnabled))
+    .border({ width: 1, color: ThemeService.getColor('card_border', this.darkModeEnabled) })
+    .shadow({ radius: 14, color: ThemeService.getColor('shadow_card', this.darkModeEnabled), offsetX: 0, offsetY: 4 })
     .animation({ duration: 220, curve: Curve.EaseInOut });
   }
 }

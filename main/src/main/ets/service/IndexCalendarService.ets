@@ -1,6 +1,7 @@
-import { DailyPunchRecord } from '../model/DailyPunchRecord';
+﻿import { DailyPunchRecord } from '../model/DailyPunchRecord';
 import { CalendarSlot } from '../model/CalendarSlot';
 import { TimeUtils } from './TimeUtils';
+import { ThemeService } from './ThemeService';
 
 export class IndexCalendarService {
   static buildMonthSlots(displayYear: number, displayMonth: number, records: DailyPunchRecord[]): CalendarSlot[] {
@@ -87,17 +88,17 @@ export class IndexCalendarService {
     return result;
   }
 
-  static getDayCellColor(slot: CalendarSlot, selectedDateKey: string, darkModeEnabled: boolean): string {
+  static getDayCellColor(slot: CalendarSlot, selectedDateKey: string, _darkModeEnabled: boolean): ResourceColor {
     if (!slot.inCurrentMonth) {
-      return '#00000000';
+      return ThemeService.getColor('transparent', _darkModeEnabled);
     }
     if (slot.dateKey === selectedDateKey) {
-      return '#2E67F8';
+      return ThemeService.getColor('brand', _darkModeEnabled);
     }
     if (slot.isToday) {
-      return darkModeEnabled ? '#2D3548' : '#EEF3FF';
+      return ThemeService.getColor('surface_brand_bg', _darkModeEnabled);
     }
-    return darkModeEnabled ? '#1E2636' : '#F6F8FC';
+    return ThemeService.getColor('calendar_idle_bg', _darkModeEnabled);
   }
 
   private static getRecordPunchCount(records: DailyPunchRecord[], dateKey: string): number {

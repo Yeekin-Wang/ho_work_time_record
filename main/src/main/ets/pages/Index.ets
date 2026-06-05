@@ -1,3 +1,4 @@
+﻿import { common } from '@kit.AbilityKit';
 import { LengthMetrics, router } from '@kit.ArkUI';
 import { ExcludedRange } from '../model/ExcludedRange';
 import { DailyPunchRecord } from '../model/DailyPunchRecord';
@@ -9,6 +10,7 @@ import { IndexCalendarService } from '../service/IndexCalendarService';
 import { PersistState } from '../service/IndexPreferencesService';
 import { WorkTimeStateService } from '../service/WorkTimeStateService';
 import { ThemeService } from '../service/ThemeService';
+import { ResourceTextService } from '../service/ResourceTextService';
 import { DEFAULT_TARGET_HOURS, DEFAULT_WORKDAY_START, THEME_MODE_SYSTEM, WEEKDAY_NAMES } from '../constants/IndexConstants';
 import { MainHeader } from '../components/index/MainHeader';
 import { PunchCardSection } from '../components/index/PunchCardSection';
@@ -57,6 +59,13 @@ struct Index {
   }
 
   build() {
+    WithTheme({ colorMode: ThemeService.getThemeColorMode(this.themeMode) }) {
+      this.buildThemedContent();
+    }
+  }
+
+  @Builder
+  buildThemedContent() {
     Stack({ alignContent: Alignment.TopStart }) {
       this.buildMainPage();
 
@@ -68,7 +77,7 @@ struct Index {
     .height('100%')
     .linearGradient({
       angle: 180,
-      colors: this.isEffectiveDarkMode() ? [['#1A1F2E', 0.0], ['#242B3D', 1.0]] : [['#F9FBFF', 0.0], ['#F2F5FB', 1.0]]
+      colors: [[ThemeService.getColor('page_bg', this.isEffectiveDarkMode()), 0.0], [ThemeService.getColor('page_bg_secondary', this.isEffectiveDarkMode()), 1.0]]
     })
     .animation({ duration: 220, curve: Curve.EaseInOut })
     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
@@ -86,7 +95,7 @@ struct Index {
         selectedDateKey: this.selectedDateKey,
         onOpenSettings: (): void => {
           router.pushUrl({ url: 'pages/SettingsPage' }).catch((error: Error) => {
-            this.getUIContext().getPromptAction().showToast({ message: '打开设置失败: ' + error.message });
+            this.getUIContext().getPromptAction().showToast({ message: this.getText('toast_open_settings_failed_prefix', '打开设置失败: ') + error.message });
           });
         }
       });
@@ -160,7 +169,7 @@ struct Index {
       Column()
         .width('100%')
         .height('100%')
-        .backgroundColor(this.isEffectiveDarkMode() ? '#80000000' : '#660C1729')
+        .backgroundColor(ThemeService.getColor('scrim', this.isEffectiveDarkMode()))
         .animation({ duration: 220, curve: Curve.EaseInOut })
         .onClick(() => {
           this.calendarExpanded = false;
@@ -440,17 +449,18 @@ struct Index {
 
   getExcludeSummaryText(): string {
     if (this.excludedRanges.length === 0) {
-      return '未设置排除时段';
+      return this.getText('summary_no_excluded_ranges', '未设置排除时段');
     }
-    return '已排除 ' + this.excludedRanges.length.toString() + ' 个时段';
+    return this.getText('summary_excluded_ranges_prefix', '已排除 ') + this.excludedRanges.length.toString() +
+      this.getText('summary_excluded_ranges_suffix', ' 个时段');
   }
 
   getSummaryItems(): SummaryItem[] {
     let averageMinutes: number = this.getDisplayedMonthAverageMinutes();
     let targetMinutes: number = Math.round(this.targetAverageHours * 60);
     let items: SummaryItem[] = [];
-    items.push(new SummaryItem('目标平均工时', TimeUtils.formatMinutes(targetMinutes)));
-    items.push(new SummaryItem('当前平均工时', TimeUtils.formatMinutes(averageMinutes)));
+    items.push(new SummaryItem(this.getText('summary_target_average', '目标平均工时'), TimeUtils.formatMinutes(targetMinutes)));
+    items.push(new SummaryItem(this.getText('summary_current_average', '当前平均工时'), TimeUtils.formatMinutes(averageMinutes)));
     return items;
   }
 
@@ -459,25 +469,18 @@ struct Index {
     let targetMinutes: number = Math.round(this.targetAverageHours * 60);
     let delta: number = averageMinutes - targetMinutes;
     if (delta === 0) {
-      return '与目标持平';
+      return this.getText('summary_difference_equal', '与目标持平');
     }
     if (delta > 0) {
-      return '比目标多 ' + TimeUtils.formatMinutes(delta);
+      return this.getText('summary_difference_more_prefix', '比目标多 ') + TimeUtils.formatMinutes(delta);
     }
-    return '比目标少 ' + TimeUtils.formatMinutes(0 - delta);
+    return this.getText('summary_difference_less_prefix', '比目标少 ') + TimeUtils.formatMinutes(0 - delta);
   }
 
   getDifferenceColor(): string {
     let averageMinutes: number = this.getDisplayedMonthAverageMinutes();
     let targetMinutes: number = Math.round(this.targetAverageHours * 60);
-    let delta: number = averageMinutes - targetMinutes;
-    if (delta === 0) {
-      return '#132033';
-    }
-    if (delta > 0) {
-      return '#1EA97C';
-    }
-    return '#D85353';
+    return ThemeService.getDifferenceColor(averageMinutes - targetMinutes, this.isEffectiveDarkMode());
   }
 
   getDisplayedMonthAverageMinutes(): number {
@@ -500,7 +503,8 @@ struct Index {
     let pickedField: string = field;
     this.timePickerController = new CustomDialogController({
       builder: CustomTimePickerDialog({
-        title: field === 'start' ? '编辑上班时间' : '编辑下班时间',
+        title: field === 'start' ? $r('app.string.dialog_edit_start_punch_title') : $r('app.string.dialog_edit_end_punch_title'),
+        darkModeEnabled: this.isEffectiveDarkMode(),
         selectedHour: hour,
         selectedMinute: minute,
         useMilitaryTime: true,
@@ -515,6 +519,11 @@ struct Index {
       backgroundBlurStyle: BlurStyle.NONE
     });
     this.timePickerController.open();
+  }
+
+  private getText(resourceName: string, fallback: string): string {
+    let context: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext;
+    return ResourceTextService.getString(context, resourceName, fallback);
   }
 
   applyPickedTime(field: string, hour: number, minute: number): void {

@@ -1,3 +1,4 @@
+﻿import { ThemeService } from '../../service/ThemeService';
 import { SummaryItem } from '../../model/SummaryItem';
 
 @Component
@@ -15,28 +16,28 @@ export struct SummaryCardsSection {
           Column({ space: 8 }) {
             Text(item.title)
               .fontSize(13)
-              .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+              .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
             Text(item.value)
               .fontSize(22)
               .fontWeight(FontWeight.Bold)
-              .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
+              .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled))
               .animation({ duration: 200, curve: Curve.EaseInOut });
           }
           .layoutWeight(1)
           .padding(16)
-          .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
+          .backgroundColor(ThemeService.getColor('card_bg', this.darkModeEnabled))
           .borderRadius(24)
-          .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-          .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
+          .border({ width: 1, color: ThemeService.getColor('card_border', this.darkModeEnabled) })
+          .shadow({ radius: 14, color: ThemeService.getColor('shadow_card', this.darkModeEnabled), offsetX: 0, offsetY: 4 })
           .animation({ duration: 220, curve: Curve.EaseInOut });
         }, (item: SummaryItem) => item.title + '_' + this.summaryRefreshKey.toString());
       }
       .width('100%');
 
       Column({ space: 6 }) {
-        Text('与目标平均工时对比')
+        Text($r('app.string.card_summary_compare_title'))
           .fontSize(13)
-          .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+          .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
         Text(this.differenceLabel)
           .fontSize(22)
           .fontWeight(FontWeight.Bold)
@@ -45,10 +46,10 @@ export struct SummaryCardsSection {
       }
       .width('100%')
       .padding(16)
-      .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
+      .backgroundColor(ThemeService.getColor('card_bg', this.darkModeEnabled))
       .borderRadius(24)
-      .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-      .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
+      .border({ width: 1, color: ThemeService.getColor('card_border', this.darkModeEnabled) })
+      .shadow({ radius: 14, color: ThemeService.getColor('shadow_card', this.darkModeEnabled), offsetX: 0, offsetY: 4 })
       .animation({ duration: 420, curve: Curve.EaseOut });
     }
     .width('100%');

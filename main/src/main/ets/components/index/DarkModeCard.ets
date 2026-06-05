@@ -1,3 +1,4 @@
+﻿import { ThemeService } from '../../service/ThemeService';
 import { THEME_MODE_DARK, THEME_MODE_LIGHT, THEME_MODE_SYSTEM } from '../../constants/IndexConstants';
 
 @Component
@@ -10,13 +11,13 @@ export struct DarkModeCard {
     Column({ space: 14 }) {
       Row() {
         Column({ space: 4 }) {
-          Text('显示模式')
+          Text($r('app.string.card_theme_title'))
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
-          Text('选择浅色、深色或跟随系统。')
+            .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
+          Text($r('app.string.card_theme_desc'))
             .fontSize(13)
-            .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+            .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
         }
         .layoutWeight(1)
         .alignItems(HorizontalAlign.Start);
@@ -26,40 +27,39 @@ export struct DarkModeCard {
       .alignItems(VerticalAlign.Center);
 
       Row({ space: 6 }) {
-        this.buildThemeOption(THEME_MODE_LIGHT, '浅色');
-        this.buildThemeOption(THEME_MODE_DARK, '深色');
-        this.buildThemeOption(THEME_MODE_SYSTEM, '跟随系统');
+        this.buildThemeOption(THEME_MODE_LIGHT, $r('app.string.theme_light'));
+        this.buildThemeOption(THEME_MODE_DARK, $r('app.string.theme_dark'));
+        this.buildThemeOption(THEME_MODE_SYSTEM, $r('app.string.theme_system'));
       }
       .width('100%')
       .padding(4)
       .borderRadius(16)
-      .backgroundColor(this.darkModeEnabled ? '#1E2636' : '#F6F8FC');
+      .backgroundColor(ThemeService.getColor('calendar_idle_bg', this.darkModeEnabled));
     }
     .width('100%')
     .alignItems(HorizontalAlign.Start)
     .padding(16)
     .borderRadius(24)
-    .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
-    .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
-    .shadow({ radius: 14, color: this.darkModeEnabled ? '#0000004D' : '#12223C5C', offsetX: 0, offsetY: 4 })
+    .backgroundColor(ThemeService.getColor('card_bg', this.darkModeEnabled))
+    .border({ width: 1, color: ThemeService.getColor('card_border', this.darkModeEnabled) })
+    .shadow({ radius: 14, color: ThemeService.getColor('shadow_card', this.darkModeEnabled), offsetX: 0, offsetY: 4 })
     .animation({ duration: 220, curve: Curve.EaseInOut });
   }
 
   @Builder
-  buildThemeOption(themeMode: string, label: string) {
+  buildThemeOption(themeMode: string, label: ResourceStr) {
     Text(label)
       .fontSize(14)
       .fontWeight(this.themeMode === themeMode ? FontWeight.Bold : FontWeight.Regular)
-      .fontColor(this.themeMode === themeMode ? (this.darkModeEnabled ? '#E8EDF5' : '#2E67F8') :
-        (this.darkModeEnabled ? '#8892A4' : '#60708A'))
+      .fontColor(this.themeMode === themeMode ? ThemeService.getColor('brand_text', this.darkModeEnabled) : ThemeService.getColor('text_secondary', this.darkModeEnabled))
       .textAlign(TextAlign.Center)
       .height(36)
       .layoutWeight(1)
       .borderRadius(12)
-      .backgroundColor(this.themeMode === themeMode ? (this.darkModeEnabled ? '#38446A' : '#FFFFFF') : '#00000000')
+      .backgroundColor(this.themeMode === themeMode ? ThemeService.getColor('segmented_selected_bg', this.darkModeEnabled) : ThemeService.getColor('transparent', this.darkModeEnabled))
       .shadow(this.themeMode === themeMode ?
-        { radius: 8, color: this.darkModeEnabled ? '#00000033' : '#12223C24', offsetX: 0, offsetY: 2 } :
-        { radius: 0, color: '#00000000', offsetX: 0, offsetY: 0 })
+        { radius: 8, color: ThemeService.getColor('shadow_card_active', this.darkModeEnabled), offsetX: 0, offsetY: 2 } :
+        { radius: 0, color: ThemeService.getColor('transparent', this.darkModeEnabled), offsetX: 0, offsetY: 0 })
       .onClick(() => {
         this.onChange(themeMode);
       });

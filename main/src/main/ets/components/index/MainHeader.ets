@@ -1,3 +1,4 @@
+﻿import { ThemeService } from '../../service/ThemeService';
 import { TimeUtils } from '../../service/TimeUtils';
 
 @Component
@@ -9,20 +10,20 @@ export struct MainHeader {
   build() {
     Column({ space: 16 }) {
       Stack({ alignContent: Alignment.Center }) {
-        Text('打卡')
+        Text($r('app.string.page_punch_title'))
           .fontSize(28)
           .fontWeight(FontWeight.Bold)
-          .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033');
+          .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled));
 
         Row() {
-          Button('设置')
+          Button($r('app.string.button_settings'))
             .height(42)
             .fontSize(14)
             .fontWeight(FontWeight.Medium)
-            .fontColor(this.darkModeEnabled ? '#E8EDF5' : '#132033')
-            .backgroundColor(this.darkModeEnabled ? '#242B3D' : '#FFFFFF')
+            .fontColor(ThemeService.getColor('text_primary', this.darkModeEnabled))
+            .backgroundColor(ThemeService.getColor('card_bg', this.darkModeEnabled))
             .borderRadius(21)
-            .border({ width: 1, color: this.darkModeEnabled ? '#3A4255' : '#D8E0F0' })
+            .border({ width: 1, color: ThemeService.getColor('card_border', this.darkModeEnabled) })
             .padding({ left: 18, right: 18 })
             .onClick(() => {
               this.onOpenSettings();
@@ -38,7 +39,7 @@ export struct MainHeader {
         Blank();
         Text(TimeUtils.getSelectedDateDescription(this.selectedDateKey))
           .fontSize(13)
-          .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
+          .fontColor(ThemeService.getColor('text_secondary', this.darkModeEnabled));
         Blank();
       }
       .width('100%');

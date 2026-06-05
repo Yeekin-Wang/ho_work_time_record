@@ -73,7 +73,7 @@ export class CsvUtils {
         let eveningMinutes: number = (parts.length >= 3 && parts[2].trim().length > 0) ?
           TimeUtils.parseTimeToMinutes(parts[2].trim()) : -1;
 
-        if (dateKey.length === 10) {
+        if (TimeUtils.parseDateKey(dateKey) !== null) {
           let punches: number[] = [];
           if (morningMinutes >= 0) {
             punches.push(morningMinutes);

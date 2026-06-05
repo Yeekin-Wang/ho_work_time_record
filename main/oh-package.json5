@@ -1,10 +1,10 @@
 {
   "name": "main",
   "version": "1.0.0",
-  "description": "Please describe the basic information.",
+  "description": "Main module for the HarmonyOS working time record application.",
   "main": "",
-  "author": "",
-  "license": "",
+  "author": "ho_work_time_record",
+  "license": "UNLICENSED",
   "dependencies": {}
 }
 

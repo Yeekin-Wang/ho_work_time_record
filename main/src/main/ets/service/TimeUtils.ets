@@ -61,7 +61,12 @@ export class TimeUtils {
     if (month < 1 || month > 12 || day < 1 || day > 31) {
       return null;
     }
-    return new Date(year, month - 1, day);
+    let parsedDate: Date = new Date(year, month - 1, day);
+    if (parsedDate.getFullYear() !== year || parsedDate.getMonth() !== month - 1 ||
+      parsedDate.getDate() !== day) {
+      return null;
+    }
+    return parsedDate;
   }
 
   /**

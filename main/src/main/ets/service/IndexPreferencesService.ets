@@ -5,6 +5,7 @@ import { DEFAULT_TARGET_HOURS, DEFAULT_WORKDAY_START } from '../constants/IndexC
 import { TimeUtils } from './TimeUtils';
 
 export class PersistState {
+  schemaVersion: number = 1;
   selectedDateKey: string = '';
   displayYear: number = 0;
   displayMonth: number = 0;
@@ -17,7 +18,9 @@ export class PersistState {
 
 export class IndexPreferencesService {
   private pref: preferences.Preferences | null = null;
+  private readonly schemaVersion: number = 1;
   private readonly prefName: string = 'working_time_record';
+  private readonly prefStateJson: string = 'state_json';
   private readonly prefSelectedDateKey: string = 'selected_date_key';
   private readonly prefDisplayMonth: string = 'display_month';
   private readonly prefTargetHours: string = 'target_hours';
@@ -35,6 +38,20 @@ export class IndexPreferencesService {
   }
 
   loadState(state: PersistState): void {
+    if (this.pref === null) {
+      return;
+    }
+
+    let stateJson: string = this.pref.getSync(this.prefStateJson, '') as string;
+    if (stateJson.length > 0 && this.restoreJsonState(stateJson, state)) {
+      return;
+    }
+
+    this.loadLegacyState(state);
+    this.persistState(state);
+  }
+
+  private loadLegacyState(state: PersistState): void {
     if (this.pref === null) {
       return;
     }
@@ -86,13 +103,8 @@ export class IndexPreferencesService {
     }
 
     try {
-      this.pref.putSync(this.prefSelectedDateKey, state.selectedDateKey);
-      this.pref.putSync(this.prefDisplayMonth, this.getDisplayMonthKey(state.displayYear, state.displayMonth));
-      this.pref.putSync(this.prefTargetHours, state.targetAverageHours.toString());
-      this.pref.putSync(this.prefWorkdayStartTime, state.workdayStartTime);
-      this.pref.putSync(this.prefExcludedRanges, this.serializeRanges(state.excludedRanges));
-      this.pref.putSync(this.prefRecords, this.serializeRecords(state.records));
-      this.pref.putSync(this.prefDarkMode, state.darkModeEnabled.toString());
+      state.schemaVersion = this.schemaVersion;
+      this.pref.putSync(this.prefStateJson, this.serializeState(state));
       this.pref.flush();
     } catch (_error) {
     }
@@ -104,14 +116,125 @@ export class IndexPreferencesService {
     }
 
     try {
+      let state: PersistState = new PersistState();
+      this.loadState(state);
+      state.records = [];
+      this.pref.putSync(this.prefStateJson, this.serializeState(state));
       this.pref.putSync(this.prefRecords, '');
       this.pref.flush();
     } catch (_error) {
     }
   }
 
-  private getDisplayMonthKey(year: number, month: number): string {
-    return year.toString() + '-' + TimeUtils.toTwoDigits(month + 1);
+  private serializeState(state: PersistState): string {
+    let safeState: PersistState = new PersistState();
+    safeState.schemaVersion = this.schemaVersion;
+    safeState.selectedDateKey = state.selectedDateKey;
+    safeState.displayYear = state.displayYear;
+    safeState.displayMonth = state.displayMonth;
+    safeState.targetAverageHours = state.targetAverageHours;
+    safeState.workdayStartTime = state.workdayStartTime;
+    safeState.excludedRanges = this.copyValidRanges(state.excludedRanges);
+    safeState.records = this.copyValidRecords(state.records);
+    safeState.darkModeEnabled = state.darkModeEnabled;
+    return JSON.stringify(safeState);
+  }
+
+  private restoreJsonState(content: string, state: PersistState): boolean {
+    try {
+      let parsed: PersistState = JSON.parse(content) as PersistState;
+      state.schemaVersion = this.schemaVersion;
+
+      if (typeof parsed.selectedDateKey === 'string' && TimeUtils.parseDateKey(parsed.selectedDateKey) !== null) {
+        state.selectedDateKey = parsed.selectedDateKey;
+      }
+
+      if (typeof parsed.displayYear === 'number' && typeof parsed.displayMonth === 'number' &&
+        parsed.displayYear > 0 && parsed.displayMonth >= 0 && parsed.displayMonth <= 11) {
+        state.displayYear = parsed.displayYear;
+        state.displayMonth = parsed.displayMonth;
+      }
+
+      if (typeof parsed.targetAverageHours === 'number') {
+        state.targetAverageHours = this.normalizeTargetHours(parsed.targetAverageHours);
+      }
+
+      if (typeof parsed.workdayStartTime === 'string' && TimeUtils.parseTimeToMinutes(parsed.workdayStartTime) >= 0) {
+        state.workdayStartTime = parsed.workdayStartTime;
+      }
+
+      if (Array.isArray(parsed.excludedRanges)) {
+        state.excludedRanges = this.copyValidRanges(parsed.excludedRanges);
+      }
+
+      if (Array.isArray(parsed.records)) {
+        state.records = this.copyValidRecords(parsed.records);
+      }
+
+      if (typeof parsed.darkModeEnabled === 'boolean') {
+        state.darkModeEnabled = parsed.darkModeEnabled;
+      }
+
+      return true;
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  private normalizeTargetHours(value: number): number {
+    if (Number.isNaN(value)) {
+      return DEFAULT_TARGET_HOURS;
+    }
+    if (value < 6) {
+      return 6;
+    }
+    if (value > 12) {
+      return 12;
+    }
+    return Math.round(value * 10) / 10;
+  }
+
+  private copyValidRanges(ranges: ExcludedRange[]): ExcludedRange[] {
+    let result: ExcludedRange[] = [];
+    let index: number = 0;
+    while (index < ranges.length) {
+      let item: ExcludedRange = ranges[index];
+      if (item !== null && TimeUtils.parseTimeToMinutes(item.start) >= 0 &&
+        TimeUtils.parseTimeToMinutes(item.end) > TimeUtils.parseTimeToMinutes(item.start)) {
+        result.push(new ExcludedRange(item.start, item.end));
+      }
+      index += 1;
+    }
+    result.sort((a: ExcludedRange, b: ExcludedRange): number => {
+      return TimeUtils.parseTimeToMinutes(a.start) - TimeUtils.parseTimeToMinutes(b.start);
+    });
+    return result;
+  }
+
+  private copyValidRecords(records: DailyPunchRecord[]): DailyPunchRecord[] {
+    let result: DailyPunchRecord[] = [];
+    let index: number = 0;
+    while (index < records.length) {
+      let item: DailyPunchRecord = records[index];
+      if (item !== null && TimeUtils.parseDateKey(item.dateKey) !== null && Array.isArray(item.punches)) {
+        let punches: number[] = [];
+        let innerIndex: number = 0;
+        while (innerIndex < item.punches.length) {
+          let minuteValue: number = Number(item.punches[innerIndex]);
+          if (!Number.isNaN(minuteValue) && minuteValue >= 0 && minuteValue < 24 * 60) {
+            punches.push(minuteValue);
+          }
+          innerIndex += 1;
+        }
+        punches.sort((left: number, right: number) => left - right);
+        result.push(new DailyPunchRecord(item.dateKey, punches));
+      }
+      index += 1;
+    }
+    result.sort((left: DailyPunchRecord, right: DailyPunchRecord): number => {
+      return left.dateKey.localeCompare(right.dateKey);
+    });
+    return result;
   }
 
   private restoreDisplayMonth(content: string, state: PersistState): void {
@@ -125,20 +248,6 @@ export class IndexPreferencesService {
     }
     state.displayYear = year;
     state.displayMonth = month - 1;
-  }
-
-  private serializeRanges(ranges: ExcludedRange[]): string {
-    let result: string = '';
-    let index: number = 0;
-    while (index < ranges.length) {
-      let item: ExcludedRange = ranges[index];
-      if (result.length > 0) {
-        result += '|';
-      }
-      result += item.start + ',' + item.end;
-      index += 1;
-    }
-    return result;
   }
 
   private deserializeRanges(content: string): ExcludedRange[] {
@@ -162,20 +271,6 @@ export class IndexPreferencesService {
     result.sort((a: ExcludedRange, b: ExcludedRange): number => {
       return TimeUtils.parseTimeToMinutes(a.start) - TimeUtils.parseTimeToMinutes(b.start);
     });
-    return result;
-  }
-
-  private serializeRecords(records: DailyPunchRecord[]): string {
-    let result: string = '';
-    let index: number = 0;
-    while (index < records.length) {
-      let item: DailyPunchRecord = records[index];
-      if (result.length > 0) {
-        result += '|';
-      }
-      result += item.dateKey + '=' + item.punches.join(',');
-      index += 1;
-    }
     return result;
   }
 

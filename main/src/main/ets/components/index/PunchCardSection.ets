@@ -8,7 +8,6 @@ export struct PunchCardSection {
   @Prop startTimeText: string = '--:--';
   @Prop endTimeText: string = '--:--';
   @Prop excludeSummaryText: string = '';
-  @Prop holiday: boolean = false;
   @Prop punchCardScale: number = 1;
   @Prop punchButtonGlow: number = 0;
   onPunch: () => void = () => {};
@@ -48,11 +47,6 @@ export struct PunchCardSection {
         Text(this.excludeSummaryText)
           .fontSize(13)
           .fontColor(this.darkModeEnabled ? '#8892A4' : '#60708A');
-        Blank();
-        Text(this.holiday ? '节假日' : '')
-          .fontSize(13)
-          .fontColor('#D85353')
-          .visibility(this.holiday ? Visibility.Visible : Visibility.None);
       }
       .width('100%')
       .justifyContent(FlexAlign.Start);

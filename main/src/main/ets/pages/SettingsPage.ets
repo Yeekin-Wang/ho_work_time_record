@@ -6,9 +6,9 @@ import { DailyPunchRecord } from '../model/DailyPunchRecord';
 import { PunchCalculator } from '../service/PunchCalculator';
 import { TimeUtils } from '../service/TimeUtils';
 import { IndexImportExportService, ImportRecordsResult } from '../service/IndexImportExportService';
-import { IndexPreferencesService, PersistState } from '../service/IndexPreferencesService';
+import { PersistState } from '../service/IndexPreferencesService';
+import { WorkTimeStateService } from '../service/WorkTimeStateService';
 import { DEFAULT_RANGE_END, DEFAULT_RANGE_START, DEFAULT_TARGET_HOURS, DEFAULT_WORKDAY_START } from '../constants/IndexConstants';
-import { IndexViewModel } from '../viewmodel/IndexViewModel';
 import { SettingsHeader } from '../components/index/SettingsHeader';
 import { WorkdayStartCard } from '../components/index/WorkdayStartCard';
 import { ExcludedRangesCard } from '../components/index/ExcludedRangesCard';
@@ -39,8 +39,7 @@ struct SettingsPage {
 
   private rangeTimePickerController: CustomDialogController | null = null;
   private workdayStartPickerController: CustomDialogController | null = null;
-  private readonly viewModel: IndexViewModel = new IndexViewModel();
-  private readonly preferencesService: IndexPreferencesService = new IndexPreferencesService();
+  private readonly stateService: WorkTimeStateService = new WorkTimeStateService();
   private readonly importExportService: IndexImportExportService = new IndexImportExportService();
 
   aboutToAppear(): void {
@@ -197,16 +196,12 @@ struct SettingsPage {
   }
 
   initializeData(): void {
-    this.viewModel.resetToToday();
-    this.applyViewModelState();
+    this.applyPersistState(this.stateService.createTodayState());
 
     try {
       let hostContext: Context = this.getUIContext().getHostContext() as Context;
-      this.preferencesService.init(hostContext);
-      let state: PersistState = this.viewModel.createPersistState();
-      this.preferencesService.loadState(state);
-      this.viewModel.applyPersistState(state);
-      this.applyViewModelState();
+      this.stateService.init(hostContext);
+      this.applyPersistState(this.stateService.loadPersistedState(this.createPersistState()));
     } catch (_error) {
     }
   }
@@ -217,39 +212,31 @@ struct SettingsPage {
   }
 
   persistState(): void {
-    this.preferencesService.persistState(this.createPersistState());
+    this.stateService.persistState(this.createPersistState());
   }
 
   createPersistState(): PersistState {
-    this.updateViewModelState();
-    return this.viewModel.createPersistState();
+    let state: PersistState = new PersistState();
+    state.selectedDateKey = this.selectedDateKey;
+    state.displayYear = this.displayYear;
+    state.displayMonth = this.displayMonth;
+    state.targetAverageHours = this.targetAverageHours;
+    state.workdayStartTime = this.workdayStartTime;
+    state.excludedRanges = PunchCalculator.copyRanges(this.excludedRanges);
+    state.records = WorkTimeStateService.copyRecords(this.records);
+    state.darkModeEnabled = this.darkModeEnabled;
+    return state;
   }
 
   applyPersistState(state: PersistState): void {
-    this.viewModel.applyPersistState(state);
-    this.applyViewModelState();
-  }
-
-  updateViewModelState(): void {
-    this.viewModel.selectedDateKey = this.selectedDateKey;
-    this.viewModel.displayYear = this.displayYear;
-    this.viewModel.displayMonth = this.displayMonth;
-    this.viewModel.targetAverageHours = this.targetAverageHours;
-    this.viewModel.workdayStartTime = this.workdayStartTime;
-    this.viewModel.excludedRanges = PunchCalculator.copyRanges(this.excludedRanges);
-    this.viewModel.records = IndexViewModel.copyRecords(this.records);
-    this.viewModel.darkModeEnabled = this.darkModeEnabled;
-  }
-
-  applyViewModelState(): void {
-    this.selectedDateKey = this.viewModel.selectedDateKey;
-    this.displayYear = this.viewModel.displayYear;
-    this.displayMonth = this.viewModel.displayMonth;
-    this.targetAverageHours = this.viewModel.targetAverageHours;
-    this.workdayStartTime = this.viewModel.workdayStartTime;
-    this.excludedRanges = PunchCalculator.copyRanges(this.viewModel.excludedRanges);
-    this.records = IndexViewModel.copyRecords(this.viewModel.records);
-    this.darkModeEnabled = this.viewModel.darkModeEnabled;
+    this.selectedDateKey = state.selectedDateKey;
+    this.displayYear = state.displayYear;
+    this.displayMonth = state.displayMonth;
+    this.targetAverageHours = state.targetAverageHours;
+    this.workdayStartTime = state.workdayStartTime;
+    this.excludedRanges = PunchCalculator.copyRanges(state.excludedRanges);
+    this.records = WorkTimeStateService.copyRecords(state.records);
+    this.darkModeEnabled = state.darkModeEnabled;
   }
 
   resetDeleteConfirm(): void {
@@ -440,7 +427,7 @@ struct SettingsPage {
       ]
     }).then((data: promptAction.ShowDialogSuccessResponse) => {
       if (data.index === 1) {
-        this.preferencesService.clearAllRecords();
+        this.stateService.clearAllRecords();
         this.records = [];
         context.getPromptAction().showToast({ message: '打卡数据已清空' });
       }

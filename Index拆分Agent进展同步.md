@@ -36,16 +36,16 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 
 | 项目 | 当前状态 |
 |---|---|
-| 当前阶段 | 阶段 8：收尾优化 |
-| 当前步骤 | 已完成阶段 8 收尾清理与进展文档同步；按用户指令跳过编译和构建 |
-| 当前分支 | `codex/index-stage8-cleanup` |
-| 最近一次执行时间 | 2026-06-05 09:22:49 |
+| 当前阶段 | 阶段 6：设置页页面化 |
+| 当前步骤 | 已完成阶段 6 设置页 router 页面化、主页面返回刷新与进展文档同步；按用户指令跳过编译和构建 |
+| 当前分支 | `codex/index-stage6-settings-page` |
+| 最近一次执行时间 | 2026-06-05 09:43:52 |
 | 最近一次执行人/Agent | OpenAI Codex Agent |
 | 最近一次编译结果 | 已跳过（用户明确要求跳过编译和构建部分） |
-| 最近一次回归结果 | 已完成代码级引用扫描；未执行真机/手工页面交互回归 |
+| 最近一次回归结果 | 已完成代码级残留引用扫描与 `git diff --check`；未执行真机/手工页面交互回归 |
 | 是否存在阻塞 | 否 |
 | 阻塞摘要 | 无；构建验证按本次用户指令跳过 |
-| 下一步计划 | 如继续推进，先评估是否确有必要进入可选阶段 6/7 |
+| 下一步计划 | 阶段 6 待人工/真机回归与后续提交；如继续推进，再评估是否进入可选阶段 7 |
 
 ---
 
@@ -60,7 +60,7 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 | 5 | 阶段 4 | 日历区域拆分 | 必做 | `[x]` | 2026-06-04 18:26:53 | 已完成日历 UI 与计算 service 拆分；构建验证按用户指令跳过 |
 | 6 | 阶段 5 | 导入导出与持久化 service 化 | 必做 | `[x]` | 2026-06-05 09:22:49 | 已完成代码拆分、引用扫描与阶段提交；构建验证按用户指令跳过 |
 | 7 | 阶段 8 | 收尾优化 | 必做 | `[x]` | 2026-06-05 09:22:49 | 已清理残留 Builder、未使用状态/参数和已迁移纯函数；构建验证按用户指令跳过 |
-| 8 | 阶段 6 | 设置页页面化 | 可选 | `[ ]` |  |  |
+| 8 | 阶段 6 | 设置页页面化 | 可选 | `[x]` | 2026-06-05 09:43:52 | 已新增独立 `SettingsPage.ets`，主页面通过 `router.pushUrl` 进入设置页，返回后从 preferences 重载状态；构建验证按用户指令跳过 |
 | 9 | 阶段 7 | ViewModel 收敛 | 可选 | `[ ]` |  |  |
 
 ---
@@ -533,48 +533,48 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 
 | 判断项 | 状态 | 说明 |
 |---|---|---|
-| 覆盖层逻辑仍然复杂 | `[ ]` |  |
-| 设置页需要独立生命周期 | `[ ]` |  |
-| 设置页后续会继续扩展 | `[ ]` |  |
-| 返回/手势/遮罩逻辑维护成本较高 | `[ ]` |  |
-| 团队希望统一使用 Navigation/router | `[ ]` |  |
-| 是否决定进入本阶段 | 未决定 |  |
+| 覆盖层逻辑仍然复杂 | `[x]` | 阶段 1 后设置页仍由 `Index.ets` 覆盖层控制，并保留返回、点击重置删除确认、排除时段弹窗入口等页面级状态 |
+| 设置页需要独立生命周期 | `[x]` | 设置项、排除时段和数据管理可独立加载/保存 preferences，适合从主页面拆出 |
+| 设置页后续会继续扩展 | `[x]` | 当前已有工时设置、排除时段、深色模式和数据管理模块，后续继续扩展时独立页面维护成本更低 |
+| 返回/手势/遮罩逻辑维护成本较高 | `[x]` | 已移除设置页覆盖层与手势关闭逻辑，改为系统 router 页面返回 |
+| 团队希望统一使用 Navigation/router | `[x]` | 项目通过 `main_pages.json` 配置页面，本阶段沿用 router 页面方案 |
+| 是否决定进入本阶段 | 已决定进入并完成 | 基于现有页面配置与覆盖层复杂度，执行阶段 6 |
 
 ### 12.2 阶段状态
 
 | 项目 | 内容 |
 |---|---|
-| 阶段状态 | `[ ]` |
+| 阶段状态 | `[x]` |
 | 目标分支 | `refactor/index-stage6-settings-page` |
-| 开始时间 |  |
-| 完成时间 |  |
-| 编译结果 | 未执行 |
-| 回归结果 | 未执行 |
-| 是否允许进入下一阶段 | 未确认 |
+| 开始时间 | 2026-06-05 09:43:52 |
+| 完成时间 | 2026-06-05 09:43:52 |
+| 编译结果 | 已跳过（用户明确要求跳过编译和构建部分） |
+| 回归结果 | 已完成代码级残留引用扫描与 `git diff --check`；未执行真机/手工页面交互回归 |
+| 是否允许进入下一阶段 | 是（阶段 7 仍为可选，建议先补手工回归） |
 
 ### 12.3 步骤进度
 
 | 步骤 | 内容 | 状态 | 执行记录 |
 |---|---|---|---|
-| Step 1 | 确定使用 Navigation 还是 router | `[ ]` |  |
-| Step 2 | 新建 `SettingsPage.ets` | `[ ]` |  |
-| Step 3 | 将设置组件组合进独立页面 | `[ ]` |  |
-| Step 4 | 明确设置项状态来源和回写方式 | `[ ]` |  |
-| Step 5 | 替换 `showSettingsPage` 覆盖层控制 | `[ ]` |  |
-| Step 6 | 处理页面返回按钮 | `[ ]` |  |
-| Step 7 | 处理系统返回/手势返回 | `[ ]` |  |
-| Step 8 | 如需要，检查 `module.json5` 页面配置 | `[ ]` |  |
-| Step 9 | 执行设置页页面化回归 | `[ ]` |  |
-| Step 10 | 执行阶段编译验证 | `[ ]` |  |
-| Step 11 | 提交阶段代码 | `[ ]` |  |
+| Step 1 | 确定使用 Navigation 还是 router | `[x]` | 项目当前通过 `main_pages.json` 配置页面，未发现既有 Navigation/NavDestination，采用 router 方案 |
+| Step 2 | 新建 `SettingsPage.ets` | `[x]` | 已新增 `main/src/main/ets/pages/SettingsPage.ets` |
+| Step 3 | 将设置组件组合进独立页面 | `[x]` | 已在 `SettingsPage.ets` 组合 `SettingsHeader`、工时设置、排除时段、目标工时、深色模式和数据管理组件 |
+| Step 4 | 明确设置项状态来源和回写方式 | `[x]` | 设置页通过 `IndexPreferencesService` 读取/保存状态；主页面返回后在 `onPageShow` 重载 preferences |
+| Step 5 | 替换 `showSettingsPage` 覆盖层控制 | `[x]` | 已移除 `Index.ets` 中 `showSettingsPage`、`buildSettingsPage()` 与覆盖层手势逻辑，设置入口改为 `router.pushUrl` |
+| Step 6 | 处理页面返回按钮 | `[x]` | `SettingsHeader.onBack` 调用 `router.back()` |
+| Step 7 | 处理系统返回/手势返回 | `[x]` | `SettingsPage.onBackPress()` 优先关闭设置页弹窗，否则执行 `router.back()` |
+| Step 8 | 如需要，检查 `module.json5` 页面配置 | `[x]` | `module.json5` 已指向 `main_pages.json`；已在 `main_pages.json` 增加 `pages/SettingsPage` |
+| Step 9 | 执行设置页页面化回归 | `[~]` | 未执行真机/手工页面交互回归；已执行代码级残留引用扫描 |
+| Step 10 | 执行阶段编译验证 | `[~]` | 按用户指令跳过编译和构建 |
+| Step 11 | 提交阶段代码 | `[x]` | 已提交阶段 6 设置页页面化分支 |
 
 ### 12.4 文件变更记录
 
 | 类型 | 文件 | 说明 |
 |---|---|---|
-| 新增 | `main/src/main/ets/pages/SettingsPage.ets` | 可选 |
-| 修改 | `main/src/main/ets/pages/Index.ets` |  |
-| 修改 | `main/src/main/module.json5` | 如使用 router 且需要配置页面路径 |
+| 新增 | `main/src/main/ets/pages/SettingsPage.ets` | 独立设置页面，承接设置组件、排除时段弹窗、数据管理入口和 preferences 回写 |
+| 修改 | `main/src/main/ets/pages/Index.ets` | 设置入口改为 router 跳转；返回后通过 `onPageShow` 重载状态；移除设置覆盖层与设置页专属逻辑 |
+| 修改 | `main/src/main/resources/base/profile/main_pages.json` | 增加 `pages/SettingsPage` 页面配置 |
 
 ---
 
@@ -661,6 +661,22 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 
 ### 历史执行记录
 
+### 2026-06-05 09:43 执行记录
+
+- 执行阶段：阶段 6：设置页页面化
+- 执行步骤：Step 1 - Step 11（Step 9 真机/手工回归未执行，Step 10 编译/构建按用户指令跳过）
+- 执行前状态：阶段 8 已完成，当前从 `codex/index-stage8-cleanup` 新建 `codex/index-stage6-settings-page`
+- 本次完成内容：新增独立 `SettingsPage.ets`，将设置页组件、排除时段弹窗、上班时间选择、数据管理导入/导出/清空入口迁移到独立页面；`Index.ets` 设置入口改为 `router.pushUrl({ url: 'pages/SettingsPage' })`；主页面在 `onPageShow` 中从 preferences 重载设置和记录状态；移除 `Index.ets` 中 `showSettingsPage` 覆盖层、设置页手势关闭逻辑和设置页专属方法；更新 `main_pages.json` 页面配置
+- 新增文件：`main/src/main/ets/pages/SettingsPage.ets`
+- 修改文件：`main/src/main/ets/pages/Index.ets`、`main/src/main/resources/base/profile/main_pages.json`、`Index拆分Agent进展同步.md`
+- 删除文件：无
+- 编译结果：已跳过（用户明确要求跳过编译和构建部分）
+- 回归结果：已完成代码级残留引用扫描与 `git diff --check`；未执行真机/手工页面交互回归
+- 遇到问题：阶段 6 明细文档首次补丁因文本片段不完全一致未套用
+- 处理方式：使用 UTF-8 按行定位真实文档内容后，拆成小补丁分段更新
+- 是否存在阻塞：否
+- 下一步计划：如继续推进，优先进行阶段 6 手工页面回归；阶段 7 ViewModel 收敛仍保持可选
+
 ### 2026-06-05 09:22 执行记录
 
 - 执行阶段：阶段 8：收尾优化
@@ -723,6 +739,9 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 | 2026-06-05 09:22 | 阶段 8：收尾优化 | `rg` 残留引用扫描 | 通过 | 未发现旧 Builder 名称、`rangeDialogKey`、`StorageService`、`ConfirmClearDialog`、调试输出残留 | 已完成 |
 | 2026-06-05 09:22 | 阶段 8：收尾优化 | `git diff --check` | 通过 | 无空白错误；仅 Git 提示工作区文件下次触碰时会按 CRLF 处理 | 已完成 |
 | 2026-06-05 09:22 | 阶段 8：收尾优化 | 编译/构建 | 已跳过 | 用户明确要求跳过编译和构建部分 | 已记录 |
+| 2026-06-05 09:43 | 阶段 6：设置页页面化 | `rg` 残留引用扫描 | 通过 | `Index.ets` 未发现 `showSettingsPage`、`buildSettingsPage`、设置页排除时段弹窗与导入导出方法残留 | 已完成 |
+| 2026-06-05 09:43 | 阶段 6：设置页页面化 | `git diff --check` | 通过 | 无空白错误；仅 Git 提示工作区文件下次触碰时会按 CRLF 处理 | 已完成 |
+| 2026-06-05 09:43 | 阶段 6：设置页页面化 | 编译/构建 | 已跳过 | 用户明确要求跳过编译和构建部分 | 已记录 |
 |  |  |  |  |  |  |
 
 ---
@@ -741,6 +760,7 @@ Agent 每完成一次操作后，应及时更新本文档中的：
 | 时间 | 阶段 | 分支 | Commit | 提交说明 | 是否已验证 |
 |---|---|---|---|---|---|
 | 2026-06-05 09:22 | 阶段 8：收尾优化 | `codex/index-stage8-cleanup` | 本轮提交 | `refactor(index): cleanup split structure` | 已完成代码级扫描；编译/构建按用户指令跳过 |
+| 2026-06-05 09:43 | 阶段 6：设置页页面化 | `codex/index-stage6-settings-page` | 已提交 | `refactor(index): extract settings page` | 已完成代码级扫描；编译/构建按用户指令跳过 |
 |  |  |  |  |  |  |
 
 ---

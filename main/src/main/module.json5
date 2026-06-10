@@ -36,6 +36,20 @@
     ],
     "extensionAbilities": [
       {
+        "name": "QuickPunchFormAbility",
+        "srcEntry": "./ets/form/QuickPunchFormAbility.ets",
+        "label": "$string:QuickPunchFormAbility_label",
+        "description": "$string:QuickPunchFormAbility_desc",
+        "type": "form",
+        "exported": false,
+        "metadata": [
+          {
+            "name": "ohos.extension.form",
+            "resource": "$profile:form_config"
+          }
+        ]
+      },
+      {
         "name": "MainBackupAbility",
         "srcEntry": "./ets/mainbackupability/MainBackupAbility.ets",
         "type": "backup",

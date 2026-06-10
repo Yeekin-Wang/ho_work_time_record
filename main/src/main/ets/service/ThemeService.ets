@@ -43,11 +43,11 @@ export class ThemeService {
       case 'scrim':
         return darkModeEnabled ? '#80000000' : '#660C1729';
       case 'picker_text':
-        return '#66182431';
+        return darkModeEnabled ? '#8BA0C8' : '#66182431';
       case 'picker_text_faded':
-        return '#99182431';
+        return darkModeEnabled ? '#5E7394' : '#99182431';
       case 'picker_selected_text':
-        return '#007DFF';
+        return darkModeEnabled ? '#4D8CFF' : '#007DFF';
       case 'shadow_card':
         return darkModeEnabled ? '#0000004D' : '#12223C5C';
       case 'shadow_card_active':

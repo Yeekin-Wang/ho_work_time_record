@@ -359,6 +359,18 @@
     {
       "name": "csv_example_row",
       "value": "2026-06-01,09:00,18:30"
+    },
+    {
+      "name": "dialog_delete_record_title",
+      "value": "确认删除打卡记录"
+    },
+    {
+      "name": "dialog_delete_record_message_prefix",
+      "value": "将删除 "
+    },
+    {
+      "name": "dialog_delete_record_message_suffix",
+      "value": " 的所有打卡记录，此操作不可撤销。"
     }
   ]
 }

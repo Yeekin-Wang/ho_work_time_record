@@ -18,6 +18,7 @@ import { SummaryCardsSection } from '../components/index/SummaryCardsSection';
 import { CalendarCard } from '../components/index/CalendarCard';
 import { ExpandedCalendarPanel } from '../components/index/ExpandedCalendarPanel';
 import { CustomTimePickerDialog } from './CustomTimePickerDialog';
+import { DeleteRecordConfirmDialog } from '../components/dialogs/DeleteRecordConfirmDialog';
 
 @Entry
 @Component
@@ -45,6 +46,9 @@ struct Index {
   // 自定义时间选择弹窗控制器（用于打卡时间编辑）
   private timePickerController: CustomDialogController | null = null;
   private hasInitialized: boolean = false;
+  // 待删除记录的日期（长按触发）
+  @State pendingDeleteDateKey: string = '';
+  @State deleteDialogDateLabel: string = '';
 
   private readonly stateService: WorkTimeStateService = new WorkTimeStateService();
 
@@ -71,6 +75,20 @@ struct Index {
 
       if (this.calendarExpanded) {
         this.buildExpandedCalendarOverlay();
+      }
+
+      if (this.pendingDeleteDateKey !== '') {
+        DeleteRecordConfirmDialog({
+          darkModeEnabled: this.isEffectiveDarkMode(),
+          dateLabel: this.deleteDialogDateLabel,
+          onCancel: (): void => {
+            this.pendingDeleteDateKey = '';
+            this.deleteDialogDateLabel = '';
+          },
+          onConfirm: (): void => {
+            this.confirmDeleteRecord();
+          }
+        });
       }
     }
     .width('100%')
@@ -122,6 +140,9 @@ struct Index {
             },
             onSelectDate: (dateKey: string, collapseAfterSelect: boolean): void => {
               this.selectCalendarDate(dateKey, collapseAfterSelect);
+            },
+            onLongPressDate: (dateKey: string): void => {
+              this.handleLongPressDate(dateKey);
             }
           });
 
@@ -193,6 +214,9 @@ struct Index {
         },
         onSelectDate: (dateKey: string, collapseAfterSelect: boolean): void => {
           this.selectCalendarDate(dateKey, collapseAfterSelect);
+        },
+        onLongPressDate: (dateKey: string): void => {
+          this.handleLongPressDate(dateKey);
         }
       });
     }
@@ -655,6 +679,36 @@ struct Index {
       index += 1;
     }
     return -1;
+  }
+
+  handleLongPressDate(dateKey: string): void {
+    this.deleteDialogDateLabel = TimeUtils.getDateLabelWithWeekday(dateKey, WEEKDAY_NAMES);
+    this.pendingDeleteDateKey = dateKey;
+  }
+
+  confirmDeleteRecord(): void {
+    let dateKey: string = this.pendingDeleteDateKey;
+    this.pendingDeleteDateKey = '';
+    this.deleteDialogDateLabel = '';
+
+    if (dateKey === '') {
+      return;
+    }
+
+    let nextRecords: DailyPunchRecord[] = [];
+    let index: number = 0;
+    while (index < this.records.length) {
+      if (this.records[index].dateKey !== dateKey) {
+        nextRecords.push(new DailyPunchRecord(this.records[index].dateKey,
+          PunchCalculator.copyPunches(this.records[index].punches)));
+      }
+      index += 1;
+    }
+    this.records = nextRecords;
+    this.weekContentKey++;
+    this.monthContentKey++;
+    this.summaryRefreshKey++;
+    this.persistState();
   }
 
   onBackPress(): boolean {

@@ -10,6 +10,7 @@ export struct DayCell {
   @Prop collapseAfterSelect: boolean = false;
   onSelect: (dateKey: string, collapseAfterSelect: boolean) => void =
     (_dateKey: string, _collapseAfterSelect: boolean): void => {};
+  onLongPress: (dateKey: string) => void = (_dateKey: string): void => {};
 
   build() {
     if (!this.slot.inCurrentMonth) {
@@ -52,7 +53,15 @@ export struct DayCell {
       .transition(TransitionEffect.translate({ x: 12, y: 0 }).combine(TransitionEffect.OPACITY).animation({ duration: 200, curve: Curve.EaseInOut }))
       .onClick(() => {
         this.onSelect(this.slot.dateKey, this.collapseAfterSelect);
-      });
+      })
+      .gesture(
+        LongPressGesture({ repeat: false, duration: 500 })
+          .onAction(() => {
+            if (this.slot.punchCount > 0) {
+              this.onLongPress(this.slot.dateKey);
+            }
+          })
+      );
     }
   }
 }

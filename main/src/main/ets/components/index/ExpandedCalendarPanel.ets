@@ -17,6 +17,7 @@ export struct ExpandedCalendarPanel {
   onNextMonth: () => void = () => {};
   onSelectDate: (dateKey: string, collapseAfterSelect: boolean) => void =
     (_dateKey: string, _collapseAfterSelect: boolean): void => {};
+  onLongPressDate: (dateKey: string) => void = (_dateKey: string): void => {};
   @State touchStartX: number = 0;
 
   build() {
@@ -56,6 +57,9 @@ export struct ExpandedCalendarPanel {
                 collapseAfterSelect: true,
                 onSelect: (dateKey: string, collapseAfterSelect: boolean): void => {
                   this.onSelectDate(dateKey, collapseAfterSelect);
+                },
+                onLongPress: (dateKey: string): void => {
+                  this.onLongPressDate(dateKey);
                 }
               });
             }, (slot: CalendarSlot) => slot.key + '_expanded');

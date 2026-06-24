@@ -597,8 +597,16 @@ struct Index {
   }
 
   handlePunchNow(): void {
-    let minute: number = this.getCurrentMinuteOfDay();
-    let record: DailyPunchRecord | null = this.getRecordByDateKey(this.selectedDateKey);
+    let now: Date = new Date();
+    let todayKey: string = TimeUtils.createDateKey(now);
+    let minute: number = now.getHours() * 60 + now.getMinutes();
+
+    this.selectedDateKey = todayKey;
+    this.syncDisplayMonthToSelectedDate();
+    this.calendarExpanded = false;
+    this.calendarWeekOffset = 0;
+
+    let record: DailyPunchRecord | null = this.getRecordByDateKey(todayKey);
     let nextPunches: number[] = [];
 
     if (record === null) {
@@ -608,8 +616,8 @@ struct Index {
       nextPunches.push(minute);
     }
 
-    nextPunches.sort((left: number, right: number) => left - right);
-    this.replaceRecordForDate(this.selectedDateKey, nextPunches);
+    nextPunches.sort((left: number, right: number): number => left - right);
+    this.replaceRecordForDate(todayKey, nextPunches);
     this.playPunchCardFeedback();
     this.persistState();
   }
